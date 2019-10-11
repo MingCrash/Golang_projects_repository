@@ -65,10 +65,13 @@ func (l *LogProcess) Process()  {
 	//解析模块
 	rg, err := regexp.Compile("t=([\\d+\\:\\-\\s]+)[^\n]*Level=([a-z]+)[^\n]*TraceId=(\\d+)[^\n]*Url=([^`]+)")
 	for	data := range l.rc{
-		if err != nil || len(list) < 5{
+		if err != nil {
 			continue
 		}
 		list := rg.FindStringSubmatch(string(data))
+		if len(list) < 5 {
+			continue
+		}
 		loms := LogMessage {
 			Time: 		list[1],
 			Level:		list[2],
