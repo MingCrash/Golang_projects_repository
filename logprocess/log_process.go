@@ -33,7 +33,7 @@ type Write interface {
 }
 
 type LogMessage struct {
-	Time, Level, TraceId, Url			string
+	Time, Level, TraceId, Url string
 }
 
 func (r *Reader) ReadFromFile(rc chan []byte)  {
@@ -45,7 +45,7 @@ func (r *Reader) ReadFromFile(rc chan []byte)  {
 	}
 
 	//从文件尾开始读取文件内容
-	_, _ = f.Seek(0, 0)  //光标放到最后
+	_, _ = f.Seek(0, 2)  //光标放到最后
 	rd := bufio.NewReader(f)
 	for {
 		line, err := rd.ReadBytes('\n')
@@ -65,17 +65,16 @@ func (l *LogProcess) Process()  {
 	//解析模块
 	rg, err := regexp.Compile("t=([\\d+\\:\\-\\s]+)[^\n]*Level=([a-z]+)[^\n]*TraceId=(\\d+)[^\n]*Url=([^`]+)")
 	for	data := range l.rc{
-		list := rg.FindStringSubmatch(string(data))
 		if err != nil || len(list) < 5{
 			continue
 		}
+		list := rg.FindStringSubmatch(string(data))
 		loms := LogMessage {
 			Time: 		list[1],
 			Level:		list[2],
 			TraceId: 	list[3],
 			Url: 		list[4],
 		}
-		println(loms)
 		l.wc <- loms
 	}
 }
