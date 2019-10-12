@@ -24,6 +24,6 @@ func main()  {
 	go lp.Process()
 	go lp.infwriter.WirteToInfluxDB(lp.wc)
 
-	time.Sleep(10*time.Second)
+	time.Sleep(60*time.Second)
 
 }
