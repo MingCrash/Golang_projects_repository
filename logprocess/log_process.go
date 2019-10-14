@@ -3,12 +3,14 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/influxdata/influxdb1-client/v2"
+	"image"
 	"io"
 	"log"
 	"os"
 	"regexp"
+	"strings"
 	"time"
-	"github.com/influxdata/influxdb/client/v2"
 )
 
 type Reader struct {
@@ -35,7 +37,8 @@ type Write interface {
 }
 
 type LogMessage struct {
-	Time, Level, TraceId, Url string
+	Time 						time.Time
+	Level, TraceId, Url 		string
 }
 
 func (r *Reader) ReadFromFile(rc chan []byte)  {
@@ -64,6 +67,7 @@ func (r *Reader) ReadFromFile(rc chan []byte)  {
 
 func (l *LogProcess) Process()  {
 	//解析模块
+	loc,err := time.LoadLocation("PRC")
 	rg, err := regexp.Compile("t=([\\d+\\:\\-\\s]+)[^\n]*Level=([a-z]+)[^\n]*TraceId=(\\d+)[^\n]*Url=([^`]+)")
 	for	data := range l.rc{
 		if err != nil {
@@ -73,13 +77,14 @@ func (l *LogProcess) Process()  {
 		if len(list) < 5 {
 			continue
 		}
-		loms := LogMessage {
-			Time: 		list[1],
-			Level:		list[2],
-			TraceId: 	list[3],
-			Url: 		list[4],
-		}
-		l.wc <- loms
+		msg := LogMessage{}
+		//msg.Timelocl = time.Now()
+		msg.Time,_ = time.ParseInLocation("2006-01-02 15:04:05", list[1], loc)
+		msg.Level = list[2]
+		msg.TraceId = list[3]
+		msg.Url = list[4]
+
+		l.wc <- msg
 	}
 }
 
@@ -87,50 +92,55 @@ func (w *Writer) WirteToInfluxDB(wc chan LogMessage) {
 	//写入 InfluxDB 时序数据库
 
 	// Create a new HTTPClient
-	c, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     "http://localhost:8086",
-		Username: username,
-		Password: password,
+	//http://localhost:8086&zhuzhiming&suzuki
+	sn := strings.Split(w.influxDBDsn,"&")
+	cle, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr:     	sn[0],
+		Username: 	sn[1],
+		Password: 	sn[2],
 	})
 	if err != nil {
-		log.Fatal(err)
+		panic("Error creating InfluxDB Client: ")
 	}
-	defer c.Close()
-
-	// Create a new point batch
-	bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  MyDB,
-		Precision: "s",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a point and add to batch
-	tags := map[string]string{"cpu": "cpu-total"}
-	fields := map[string]interface{}{
-		"idle":   10.1,
-		"system": 53.3,
-		"user":   46.6,
-	}
-
-	pt, err := client.NewPoint("cpu_usage", tags, fields, time.Now())
-	if err != nil {
-		log.Fatal(err)
-	}
-	bp.AddPoint(pt)
-
-	// Write the batch
-	if err := c.Write(bp); err != nil {
-		log.Fatal(err)
-	}
+	defer cle.Close()
 
 	// Close client resources
-	if err := c.Close(); err != nil {
-		log.Fatal(err)
+	if err := cle.Close(); err != nil {
+		fmt.Println("Error closing client: ", err.Error())
 	}
 
 	for data := range wc{
-		println(data.Url,data.TraceId,data.Level,data.Time)
+		//println(data.Url,data.TraceId,data.Level,data.Time.Format("2006-01-02 15:04:05"),data.Timelocl.Format("2006-01-02 15:04:05"))
+		// Create a point
+		tags := map[string]string{
+			"Url": data.Url,
+			"Level":   data.Level,
+			"TraceId": data.TraceId,
+		}
+		fields := map[string]interface{}{
+			"Time":   data.Time,
+
+		}
+		pt, err := client.NewPoint("mallorder", tags, fields, time.Now())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Create a new point batch  创建批量注入
+		bp, err := client.NewBatchPoints(client.BatchPointsConfig{
+			Database:  MyDB,
+			Precision: "s",
+		})
+		if err != nil {
+			fmt.Println("Error creating NewBatchPoints: ", err.Error())
+		}
+
+		//add point to point batch
+		bp.AddPoint(pt)
+
+		// Write the batch
+		if err := cle.Write(bp); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
