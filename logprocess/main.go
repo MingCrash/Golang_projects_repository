@@ -2,8 +2,18 @@ package main
 
 import (
 	"flag"
+	"io"
 	"runtime"
 )
+
+func ReadFrom(reader io.Reader,num int) ([]byte,error) {
+	p := make([]byte,num)
+	n,err := reader.Read(p)
+	if n > 0 {
+		return p[:n], nil
+	}
+	return p,err
+}
 
 func main()  {
 	var logpath, influxsn string
@@ -29,18 +39,6 @@ func main()  {
 	go lp.logreader.ReadFromFile(lp.rc)
 	go lp.Process()
 	go lp.infwriter.WirteToInfluxDB(lp.wc)
-
 	sy.Monitor(lp)
 
-	//ticker := time.NewTicker(5*time.Second)
-	//go func() {
-	//	for {
-	//		//此处在等待channel中的信号，因此执行此段代码时会阻塞5秒
-	//		fmt.Println("未接受信号,等待")
-	//		<-ticker.C
-	//		fmt.Println("已接受信号，处理定时函数")
-	//	}
-	//}()
-	//
-	//time.Sleep(11*time.Second)
 }

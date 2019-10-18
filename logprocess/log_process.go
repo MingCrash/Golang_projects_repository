@@ -2,8 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
-	client "github.com/influxdata/influxdb1-client/v2"
+	"github.com/influxdata/influxdb1-client/v2"
 	"io"
 	"log"
 	"net/http"
@@ -29,11 +30,11 @@ type LogProcess struct {
 }
 
 type Read interface {
-	ReadFromFile()
+	ReadFromFile(chan []byte)
 }
 
 type Write interface {
-	WirteToInfluxDB()
+	WirteToInfluxDB(chan LogProcess)
 }
 
 //日志信息
@@ -63,6 +64,7 @@ func (r *Reader) ReadFromFile(rc chan []byte)  {
 		if err != nil {
 			statusMonitorChan <- ErrorTypeNum
 			panic(fmt.Sprintf("log file readed failture:%s", err.Error()))
+			continue
 		}
 		rc <- line[:len(line)-1]
 	}
@@ -217,6 +219,12 @@ func (sm *SystemMonitor) Monitor(lp *LogProcess)  {
 		sm.info.Readchan = len(lp.rc)
 		sm.info.Writechan = len(lp.wc)
 		sm.info.Tps = float64(subline/5)
+
+		ret,err := json.MarshalIndent(sm.info,"","\t")
+		if err != nil {
+			log.Fatal("")
+		}
+		_, _ = io.WriteString(writer, string(ret))
 	})
 
 	_ = http.ListenAndServe(":9091", nil)  //ListenAndServe 有阻塞作用
