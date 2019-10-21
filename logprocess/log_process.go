@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/influxdata/influxdb1-client/v2"
+	"github.com/influxdata/influxdb/client/v2"
 	"io"
 	"log"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 )
 
 type Reader struct {
-	logpath 	string
+	logpath string
 }
 
 type Writer struct {
@@ -23,10 +23,10 @@ type Writer struct {
 }
 
 type LogProcess struct {
-	rc chan 	[]byte
-	wc chan 	LogMessage
-	logreader 	Reader
-	infwriter 	Writer
+	rc        chan []byte
+	wc        chan LogMessage
+	logreader Reader
+	infwriter Writer
 }
 
 type Read interface {
@@ -39,26 +39,26 @@ type Write interface {
 
 //日志信息
 type LogMessage struct {
-	Time 								time.Time
-	Level, TraceId, Url, statCode 		string
+	Time                          time.Time
+	Level, TraceId, Url, statCode string
 }
 
-func (r *Reader) ReadFromFile(rc chan []byte)  {
+func (r *Reader) ReadFromFile(rc chan []byte) {
 	//读取模块
 	//打开文件
 	f, err := os.Open(r.logpath)
 	if err != nil {
-		panic(fmt.Sprintf("open file error:%s",err.Error()))
+		panic(fmt.Sprintf("open file error:%s", err.Error()))
 	}
 
 	//从文件尾开始读取文件内容
-	_, _ = f.Seek(0, 2)  //光标放到最后
+	_, _ = f.Seek(0, 2) //光标放到最后
 	rd := bufio.NewReader(f)
 	for {
 		line, err := rd.ReadBytes('\n')
 		if err == io.EOF {
 			statusMonitorChan <- ErrorTypeNum
-			time.Sleep(500*time.Millisecond)
+			time.Sleep(500 * time.Millisecond)
 			continue
 		}
 		if err != nil {
@@ -70,11 +70,11 @@ func (r *Reader) ReadFromFile(rc chan []byte)  {
 	}
 }
 
-func (l *LogProcess) Process()  {
+func (l *LogProcess) Process() {
 	//解析模块
-	loc,err := time.LoadLocation("PRC")
+	loc, err := time.LoadLocation("PRC")
 	rg, err := regexp.Compile("t=([\\d+\\:\\-\\s]+)[^\n]*Level=([a-z]+)[^\n]*TraceId=(\\d+)[^\n]*Url=([^`]+)[^\n]*code=(\\d+)")
-	for	data := range l.rc{
+	for data := range l.rc {
 		if err != nil {
 			statusMonitorChan <- ErrorTypeNum
 			continue
@@ -85,7 +85,7 @@ func (l *LogProcess) Process()  {
 			continue
 		}
 		msg := LogMessage{}
-		msg.Time,_ = time.ParseInLocation("2006-01-02 15:04:05", list[1], loc)
+		msg.Time, _ = time.ParseInLocation("2006-01-02 15:04:05", list[1], loc)
 		msg.Level = list[2]
 		msg.TraceId = list[3]
 		msg.Url = list[4]
@@ -99,11 +99,11 @@ func (w *Writer) WirteToInfluxDB(wc chan LogMessage) {
 	//写入 InfluxDB 时序数据库
 
 	// Create a new HTTPClient
-	sn := strings.Split(w.influxDBDsn,"@")
+	sn := strings.Split(w.influxDBDsn, "@")
 	cle, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     	sn[0],
-		Username: 	sn[1],
-		Password: 	sn[2],
+		Addr:     sn[0],
+		Username: sn[1],
+		Password: sn[2],
 	})
 	if err != nil {
 		statusMonitorChan <- ErrorTypeNum
@@ -116,16 +116,16 @@ func (w *Writer) WirteToInfluxDB(wc chan LogMessage) {
 	//	fmt.Println("Error closing client: ", err.Error())
 	//}
 
-	for data := range wc{
+	for data := range wc {
 		// Create a point
 		tags := map[string]string{
-			"Url": 		data.Url,
-			"Level":   	data.Level,
-			"Code":   	data.statCode,
+			"Url":   data.Url,
+			"Level": data.Level,
+			"Code":  data.statCode,
 		}
 		fields := map[string]interface{}{
-			"Time":   	data.Time,
-			"TraceId": 	data.TraceId,
+			"Time":    data.Time,
+			"TraceId": data.TraceId,
 		}
 		fmt.Println(tags, fields)
 
@@ -156,34 +156,31 @@ func (w *Writer) WirteToInfluxDB(wc chan LogMessage) {
 	}
 }
 
-
 //=====================================================================================================================
 
 const (
-	ErrorTypeNum = 0
+	ErrorTypeNum      = 0
 	HandlelineTypeNum = 1
 )
 
-var statusMonitorChan = make(chan int ,100)
+var statusMonitorChan = make(chan int, 100)
 
 //日志系统监控信息
 type Systeminfo struct {
-	Handleline  	int           `json:"handleline"`		//总处理日志行数
-	Tps         	float64       `json:"tps"`				//监控系统吞吐量
-	Readchan    	int           `json:"readchan"` 		//当前读日志缓存数(read channel长度)
-	Writechan    	int           `json:"writechan"`		//当前读日志缓存数(write channel长度)
-	RunTotletime	string        `json:"run_totletime"`	//日志系统运行总时间
-	ErrTotal 		int 		  `json:"err_total"`		//处理错误总数
+	Handleline   int     `json:"handleline"`    //总处理日志行数
+	Tps          float64 `json:"tps"`           //监控系统吞吐量
+	Readchan     int     `json:"readchan"`      //当前读日志缓存数(read channel长度)
+	Writechan    int     `json:"writechan"`     //当前读日志缓存数(write channel长度)
+	RunTotletime string  `json:"run_totletime"` //日志系统运行总时间
+	ErrTotal     int     `json:"err_total"`     //处理错误总数
 }
 
 type SystemMonitor struct {
-	StartTime  		time.Time
-	info			Systeminfo
+	StartTime time.Time
+	info      Systeminfo
 }
 
-
-
-func (sm *SystemMonitor) Monitor(lp *LogProcess)  {
+func (sm *SystemMonitor) Monitor(lp *LogProcess) {
 	//日志系统监控器模块
 	var subline int
 
@@ -192,20 +189,20 @@ func (sm *SystemMonitor) Monitor(lp *LogProcess)  {
 		for sy := range statusMonitorChan {
 			switch sy {
 			case ErrorTypeNum:
-				sm.info.ErrTotal ++
+				sm.info.ErrTotal++
 			case HandlelineTypeNum:
-				sm.info.Handleline ++
+				sm.info.Handleline++
 			}
 		}
 	}()
 
-	//每五秒
-	ticker := time.NewTicker(5*time.Second)
+	//每五秒心跳计算处理日志line增量数
+	ticker := time.NewTicker(5 * time.Second)
 	go func() {
 		for {
 			lasttmp := sm.info.Handleline
 			//此处在等待channel中的信号，因此执行此段代码时会阻塞5秒
-			_,ok := <-ticker.C   	//读取空 channel 会阻塞
+			_, ok := <-ticker.C //读取空 channel 会阻塞
 			if !ok {
 				log.Fatal("Error:channel has been closed")
 			}
@@ -218,14 +215,14 @@ func (sm *SystemMonitor) Monitor(lp *LogProcess)  {
 		sm.info.RunTotletime = string(time.Now().Sub(sm.StartTime))
 		sm.info.Readchan = len(lp.rc)
 		sm.info.Writechan = len(lp.wc)
-		sm.info.Tps = float64(subline/5)
+		sm.info.Tps = float64(subline / 5)
 
-		ret,err := json.MarshalIndent(sm.info,"","\t")
+		ret, err := json.MarshalIndent(sm.info, "", "\t")
 		if err != nil {
 			log.Fatal("")
 		}
 		_, _ = io.WriteString(writer, string(ret))
 	})
 
-	_ = http.ListenAndServe(":9091", nil)  //ListenAndServe 有阻塞作用
+	_ = http.ListenAndServe(":9091", nil) //ListenAndServe 有阻塞作用
 }
