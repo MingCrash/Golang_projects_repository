@@ -56,16 +56,16 @@ func (r *Reader) ReadFromFile(rc chan []byte)  {
 	rd := bufio.NewReader(f)
 	for {
 		line, err := rd.ReadBytes('\n')
-		if err == io.EOF {
+		if err == io.EOF || err != nil{
 			statusMonitorChan <- ErrorTypeNum
 			time.Sleep(500*time.Millisecond)
 			continue
 		}
-		if err != nil {
-			statusMonitorChan <- ErrorTypeNum
-			panic(fmt.Sprintf("log file readed failture:%s", err.Error()))
-			continue
-		}
+		//if  {
+		//	statusMonitorChan <- ErrorTypeNum
+		//	panic(fmt.Sprintf("log file readed failture:%s", err.Error()))
+		//	continue
+		//}
 		rc <- line[:len(line)-1]
 	}
 }
