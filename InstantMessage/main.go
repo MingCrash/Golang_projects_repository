@@ -44,7 +44,6 @@ func userLogin(writer http.ResponseWriter, request *http.Request)  {
 		mobile := request.PostFormValue("mobile")	//调用时，已自动解析参数
 		passwd := request.PostFormValue("passwd")
 
-
 		if (mobile == "13697413574" && passwd == "123456"){
 			writer.WriteHeader(success_status)
 			Resp(success_status,"Login success",`{"id":100001,"token":"test"}`,writer)
@@ -54,30 +53,54 @@ func userLogin(writer http.ResponseWriter, request *http.Request)  {
 		}
 }
 
+func UserTypeView(w http.ResponseWriter)  {
+	tpl, err := template.ParseGlob("./**/**/*")   //ParseGlob
+	if err != nil {log.Fatal("template ParseFiles Failture" + err.Error())}
+	for _,v := range tpl.Templates() {
+		tplname := v.Name()
+		//注册handler
+		http.HandleFunc(tplname, func(writer http.ResponseWriter, request *http.Request) {
+				err = v.ExecuteTemplate(w, tplname, nil)
+				if err != nil {log.Fatal("Execute Template Failture"+err.Error())}
+		})
+	}
+}
+
 func main() {
 	//处理 通过API访问 的函数
 	http.HandleFunc("/user/login",userLogin)
 
 	//提供静态资源目录支持
-	http.Handle("/static/css/",http.FileServer(http.Dir("./static/css")))   //pattern不是胡乱起名，需要根据具体目录地址
-	http.Handle("/static/fonts/",http.FileServer(http.Dir("./static/fonts")))   //pattern不是胡乱起名，需要根据具体目录地址
-	http.Handle("/static/images/",http.FileServer(http.Dir("./static/images")))   //pattern不是胡乱起名，需要根据具体目录地址
+	http.Handle("/asset/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
 
 	//使用template模板渲染
-	http.HandleFunc("/user/login.html", func(w http.ResponseWriter, r *http.Request) {
-		//template解析
-		tpl, err := template.ParseFiles("view/login.html")
-		if err != nil {
-			//打印并直接退出
-			log.Fatal("template ParseFiles Failture" + err.Error())
-		}
-		err = tpl.ExecuteTemplate(w, "/user/login/login.html", nil)
-
-		if err != nil {
-			//打印并直接退出
-			log.Fatal("Execute Template Failture"+err.Error())
-		}
-	})
+	//http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+	//	//template解析
+	//	tpl, err := template.ParseFiles("./view/user/login.html")
+	//	if err != nil {
+	//		//打印并直接退出
+	//		log.Fatal("template ParseFiles Failture" + err.Error())
+	//	}
+	//	err = tpl.ExecuteTemplate(w, "/user/login.shtml", nil)
+	//	if err != nil {
+	//		//打印并直接退出
+	//		log.Fatal("Execute Template Failture"+err.Error())
+	//	}
+	//})
+	////注册
+	//http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+	//	//template解析
+	//	tpl, err := template.ParseFiles("./view/user/register.html")
+	//	if err != nil {
+	//		//打印并直接退出
+	//		log.Fatal("template ParseFiles Failture" + err.Error())
+	//	}
+	//	err = tpl.ExecuteTemplate(w, "/user/register.shtml", nil)
+	//	if err != nil {
+	//		//打印并直接退出
+	//		log.Fatal("Execute Template Failture"+err.Error())
+	//	}
+	//})
 
 	_ = http.ListenAndServe(":9090", nil)
 }
