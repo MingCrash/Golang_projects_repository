@@ -1,15 +1,18 @@
 package main
 
 import (
+	"./model"
+	"./service"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 )
 
 const (
-	success_status = 200
+	successStatus           = 200
 	notresourcefound_status = 403
 )
 
@@ -35,6 +38,8 @@ func Resp(code int,msg string,data interface{},writer http.ResponseWriter){
 	}
 }
 
+
+var userService  *service.UserService
 func userLogin(writer http.ResponseWriter, request *http.Request)  {
 		writer.Header().Set("`Content`-Type","json/xml")
 		//_ = request.ParseForm()
@@ -45,16 +50,39 @@ func userLogin(writer http.ResponseWriter, request *http.Request)  {
 		passwd := request.PostFormValue("passwd")
 
 		if (mobile == "13697413574" && passwd == "123456"){
-			writer.WriteHeader(success_status)
-			Resp(success_status,"Login success",`{"id":100001,"token":"test"}`,writer)
+			writer.WriteHeader(successStatus)
+			Resp(successStatus,"Login success",`{"id":100001,"token":"test"}`,writer)
 		}else {
 			writer.WriteHeader(notresourcefound_status)
  			Resp(notresourcefound_status,"Not resource found",`{"id":none,"token":"test"}`,writer)
 		}
 }
 
+func userRegister(writer http.ResponseWriter, request *http.Request)  {
+	writer.Header().Set("`Content`-Type","json/xml")
+	//_ = request.ParseForm()
+	//mobile := request.PostForm.Get("mobile")		//读取参数前需要解析
+	//passwd := request.PostForm.Get("passwd")
+
+	mobile := request.PostFormValue("mobile")	//调用时，已自动解析参数
+	plainpwd := request.PostFormValue("passwd")
+	nickname := fmt.Sprintf("user%06d",rand.Int31())
+	avatar := ""
+	sex := model.SEX_UNKNOWN
+
+	newuser, err := userService.Register(mobile, plainpwd, nickname, avatar, sex)
+	if err != nil{
+		writer.WriteHeader(successStatus)
+		Resp(-1,err.Error(),nil,writer)
+	}else{
+		writer.WriteHeader(successStatus)
+		Resp(0,"",newuser,writer)
+	}
+}
+
+//注册视图
 func UserTypeView()  {
-	tpl, err := template.ParseGlob("./**/**/*")   //ParseGlob
+	tpl, err := template.ParseGlob("./view/user/*.html")   //ParseGlob找到符合
 	if err != nil {log.Fatal("template ParseFiles Failture" + err.Error())}
 	for _,v := range tpl.Templates() {
 		tplname := v.Name()
@@ -69,8 +97,9 @@ func UserTypeView()  {
 func main() {
 	//处理 通过API访问 的函数
 	http.HandleFunc("/user/login",userLogin)
+	http.HandleFunc("/user/register",userRegister)
 
-	//提供静态资源目录支持
+	//提供静态资源目录支持,js,css等文件引用就靠这个了
 	http.Handle("/asset/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
 
 	//使用template模板渲染
@@ -105,6 +134,7 @@ func main() {
 	UserTypeView()
 
 	_ = http.ListenAndServe(":9090", nil)
+
 }
 
 
