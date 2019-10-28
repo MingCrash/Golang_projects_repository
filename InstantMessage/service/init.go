@@ -12,7 +12,7 @@ var  DBEngine  *xorm.Engine
 //init函数不能被其他函数调用，在main之前执行
 func init()  {
 	driverName := "mysql"
-	dataSourceName := "root:zzm441538235@(127.0.0.1:3306)/user_account?charset=utf8"
+	dataSourceName := "root:123456@(192.168.0.48:3306)/user_account?charset=utf8"
 	var err = errors.New("")
 	DBEngine,err = xorm.NewEngine(driverName,dataSourceName)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -13,7 +14,6 @@ type UserService struct {
 }
 
 func (us *UserService) Register(mobile,plainpwd,nickname,avatar,sex string) (user model.User,err error) {
-
 	//检测手机号码是否存在,
 	tmp := model.User{}
 	_,err = DBEngine.Where("mobile=?",mobile).Get(&tmp)
@@ -41,6 +41,20 @@ func (us *UserService) Register(mobile,plainpwd,nickname,avatar,sex string) (use
 }
 
 func (us *UserService) Login(mobile,plainpwd string) (user model.User,err error) {
+	//首先通过手机号查询用户
+	tmp := model.User{}
+	 _, err = DBEngine.Where("mobile = ?", mobile).Get(&tmp)
+	if err!=nil {
+		return tmp,err
+	}
+	//查询到对比密码
+	if !unit.ValidatePasswd(plainpwd,tmp.Salt,tmp.Passwd){
+		return tmp,errors.New("密码不正确")
+	}
+	//刷新token
+	tmp.Token = unit.MD5Encode(strconv.Itoa(int(time.Now().Unix())))
+	_, _ = DBEngine.ID(tmp.Id).Cols("token").Update(&tmp)
 
-	return user, err
+	//返回数据
+	return tmp, nil
 }

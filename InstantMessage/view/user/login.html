@@ -61,8 +61,10 @@
                     if(res.code!==0){
                         mui.toast(res.msg)
                     }else{
+                        var url = "/chat/index.shtml?id="+res.data.id+"&token="+res.data.token;
                         //location.replace("//127.0.0.1/demo/index.shtml")
-                        mui.toast("登录成功,即将跳转")
+                        // mui.toast("登录成功,即将跳转")
+                        mui.alert(url)
                     }
                 })
             },
