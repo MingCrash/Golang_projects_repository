@@ -3,7 +3,6 @@ package service
 import (
 	"../model"
 	"errors"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
 	"log"
@@ -23,10 +22,12 @@ func init()  {
 	DBEngine.ShowExecTime(true)
 	DBEngine.SetMaxOpenConns(2)
 
-	err = DBEngine.Sync2(new(model.User))
+	//同步数据库表
+	err = DBEngine.Sync2(
+		new(model.User),
+		new(model.Contact),
+		new(model.Community))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-
-	fmt.Println("db init success")
 }

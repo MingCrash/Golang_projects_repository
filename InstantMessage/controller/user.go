@@ -1,13 +1,12 @@
 package controller
 
 import (
+	"../model"
+	"../service"
+	"../unit"
 	"fmt"
 	"math/rand"
 	"net/http"
-	"../service"
-	"../unit"
-	"../model"
-	"strconv"
 )
 const (
 	successStatus           = 200
@@ -39,18 +38,22 @@ func UserRegister(writer http.ResponseWriter, request *http.Request)  {
 }
 
 func UserLogin(writer http.ResponseWriter, request *http.Request)  {
-	writer.Header().Set("`Content`-Type","json/xml")
+	writer.Header().Set("Content-Type","json/xml")
 	//_ = request.ParseForm()
 	//mobile := request.PostForm.Get("mobile")		//读取参数前需要解析
 	//passwd := request.PostForm.Get("passwd")
 
 	mobile := request.PostFormValue("mobile")	//调用时，已自动解析参数
 	plainpwd := request.PostFormValue("passwd")
-
-	var user, err = service.UserService.Login(mobile,plainpwd)
+	var user, err = userService.Login(mobile,plainpwd)
 	if err!=nil{
 		unit.RespFail(writer,err)
 	}else {
 		unit.RespSuccess(writer,user)
 	}
+}
+
+func Useraddfriend(writer http.ResponseWriter, request *http.Request)  {
+	writer.Header().Set("Content-Type","json/xml")
+
 }

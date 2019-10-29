@@ -33,7 +33,7 @@ func (us *UserService) Register(mobile,plainpwd,nickname,avatar,sex string) (use
 	tmp.Sex = sex
 	tmp.Createat = time.Now()
 	tmp.Salt = fmt.Sprintf("%06d",rand.Int31n(10000))
-	tmp.Passwd = unit.MakePasswd(tmp.Passwd,tmp.Salt)
+	tmp.Passwd = unit.MakePasswd(plainpwd,tmp.Salt)
 	_, err = DBEngine.InsertOne(&tmp)
 
 	//最后返回用户信息
@@ -49,11 +49,12 @@ func (us *UserService) Login(mobile,plainpwd string) (user model.User,err error)
 	}
 	//查询到对比密码
 	if !unit.ValidatePasswd(plainpwd,tmp.Salt,tmp.Passwd){
-		return tmp,errors.New("密码不正确")
+		return tmp,errors.New("账号密码不正确")
 	}
 	//刷新token
 	tmp.Token = unit.MD5Encode(strconv.Itoa(int(time.Now().Unix())))
-	_, _ = DBEngine.ID(tmp.Id).Cols("token").Update(&tmp)
+	tmp.Online = true
+	_, _ = DBEngine.ID(tmp.Id).Cols("token,online").Update(&tmp)
 
 	//返回数据
 	return tmp, nil
