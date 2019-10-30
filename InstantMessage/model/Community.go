@@ -6,8 +6,8 @@ const (
 	COMMUNITY_CATE_COM = 1
 )
 type Community struct {
-	Id  	int64
-	Name    string			//名称
+	Id  		int64
+	Name    	string		//名称
 	Ownerid 	int64		//群主ID
 	Icon  		string		//群logo
 	Cate		int

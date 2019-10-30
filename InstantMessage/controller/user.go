@@ -14,9 +14,10 @@ const (
 )
 
 var userService  *service.UserService
+var contactService  *service.ContactService
 
 func UserRegister(writer http.ResponseWriter, request *http.Request)  {
-	writer.Header().Set("`Content`-Type","json/xml")
+	writer.Header().Set("Content-Type","json/xml")
 	//_ = request.ParseForm()
 	//mobile := request.PostForm.Get("mobile")		//读取参数前需要解析
 	//passwd := request.PostForm.Get("passwd")
@@ -53,7 +54,15 @@ func UserLogin(writer http.ResponseWriter, request *http.Request)  {
 	}
 }
 
-func Useraddfriend(writer http.ResponseWriter, request *http.Request)  {
+func ContactAddfriend(writer http.ResponseWriter, request *http.Request)  {
 	writer.Header().Set("Content-Type","json/xml")
-
+	var args model.Args
+	//绑定对象（将接收到不同类型的数据归一化格式）
+	_ = unit.Bind(request, &args)
+	err := contactService.Addfriend(args.UserId, args.DistId)
+	if err!=nil{
+		unit.RespFail(writer,err)
+	}else {
+		unit.RespSuccess(writer,nil)
+	}
 }

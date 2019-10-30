@@ -12,9 +12,11 @@ type loginresp struct {
 	Data  		interface{}    	 //interface{} 在golang语言中表示任何类型
 }
 
+
 func RespSuccess(writer http.ResponseWriter,data interface{})  {
 	Resp(0,"",data,writer)
 }
+
 func RespFail(writer http.ResponseWriter,err error)  {
 	Resp(-1,err.Error(),nil,writer)
 }

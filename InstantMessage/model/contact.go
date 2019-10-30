@@ -6,7 +6,8 @@ const (
 	CONCAT_CATE_USER = 1
 	CONCAT_CATE_COMUNITY = 2
 )
-//通信表
+//用户关系表
+//好友和群都存在这个表里面
 type Contact struct {
 	Id 			int64
 	Ownerid		int64
@@ -14,4 +15,9 @@ type Contact struct {
 	Cate		int
 	Memo        string
 	Createat 	time.Time
+}
+
+type Args struct {
+	UserId  	int64
+	DistId		int64
 }

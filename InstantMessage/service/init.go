@@ -1,10 +1,10 @@
 package service
 
 import (
-	"../model"
 	"errors"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/go-xorm/xorm"
+	"../model"
 	"log"
 )
 var  DBEngine  *xorm.Engine

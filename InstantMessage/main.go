@@ -25,7 +25,7 @@ func main() {
 	//处理 通过API访问 的函数
 	http.HandleFunc("/user/login",controller.UserLogin)
 	http.HandleFunc("/user/register",controller.UserRegister)
-	http.HandleFunc("/contact/addfriend",controller.Useraddfriend)
+	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
 
 	//提供静态资源目录支持,js,css等文件引用就靠这个了
 	http.Handle("/asset/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
