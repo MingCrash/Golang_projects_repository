@@ -4,7 +4,9 @@ import (
 	"../model"
 	"../service"
 	"../unit"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 )
@@ -56,10 +58,17 @@ func UserLogin(writer http.ResponseWriter, request *http.Request)  {
 
 func ContactAddfriend(writer http.ResponseWriter, request *http.Request)  {
 	writer.Header().Set("Content-Type","json/xml")
-	var args model.Args
 	//绑定对象（将接收到不同类型的数据归一化格式）
-	_ = unit.Bind(request, &args)
-	err := contactService.Addfriend(args.UserId, args.DistId)
+	var args model.Args
+	//err := unit.Bind(request, &args)
+	v, _ := ioutil.ReadAll(request.Body)
+	fmt.Println(string(v))
+	err := json.Unmarshal(v, &args)
+	if err != nil{fmt.Println(err.Error())}
+	fmt.Println(args)
+	//fmt.Println(fmt.Sprintf("reqBody:%s reqForm:%s args:%s", request.Body, request.PostForm, args))
+
+	err = contactService.Addfriend(args.UserId, args.DistId)
 	if err!=nil{
 		unit.RespFail(writer,err)
 	}else {

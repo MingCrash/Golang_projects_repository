@@ -3,7 +3,6 @@ package service
 import (
 	"../model"
 	"github.com/pkg/errors"
-	//"strconv"
 	"time"
 )
 
@@ -13,14 +12,14 @@ type ContactService struct {
 func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	//判断是否自己加自己
 	if userId == distId{
-		return errors.New("不能添加自己为好友")
+		return errors.New("can't add yourself as a friend")
 	}
 
 	//判断distId是否已注册用户
 	var tmpuser model.User
 	_, err = DBEngine.ID(distId).Get(&tmpuser)
 	if tmpuser.Id>0	{
-		return errors.New("目标id并非在册用户")
+		return errors.New("Target ID is not a registered user")
 	}
 
 	//查询是否已经是好友
@@ -29,7 +28,7 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	_, err = DBEngine.Where("ownerid=?", userId).And("dstodj=?", distId).And("cate",model.CONCAT_CATE_USER).Get(&tmpcontact)
 	//如果存在记录说明已经是好友了不加
 	if tmpcontact.Id>0	{
-		return errors.New("目标id已经是你的好友")
+		return errors.New("Target ID is already your friend")
 	}
 
 	//添加好友关系

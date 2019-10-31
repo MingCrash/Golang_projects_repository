@@ -9,15 +9,15 @@ const (
 //用户关系表
 //好友和群都存在这个表里面
 type Contact struct {
-	Id 			int64
-	Ownerid		int64
-	Dstodj		int64
-	Cate		int
-	Memo        string
-	Createat 	time.Time
+	Id 			int64 		`json:"id"`
+	Ownerid		int64 		`json:"ownerid"`
+	Dstodj		int64 		`json:"dstodj"`
+	Cate		int 		`json:"cate"`
+	Memo        string 		`json:"memo"`
+	Createat 	time.Time	`json:"createat"`
 }
 
 type Args struct {
-	UserId  	int64
-	DistId		int64
+	UserId  	int64 		`json:"user_id" form:"userid"`
+	DistId		int64 		`json:"dist_id"	form:"distid"`
 }

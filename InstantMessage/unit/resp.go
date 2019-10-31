@@ -6,12 +6,11 @@ import (
 	"net/http"
 )
 
-type loginresp struct {
-	Code  		int
-	Msg   		string
-	Data  		interface{}    	 //interface{} 在golang语言中表示任何类型
+type resp struct {
+	Code  		int                   	`json:"code"`
+	Msg   		string                 	`json:"msg"`
+	Data  		interface{} 			`json:"data"`	//interface{} 在golang语言中表示任何类型
 }
-
 
 func RespSuccess(writer http.ResponseWriter,data interface{})  {
 	Resp(0,"",data,writer)
@@ -22,7 +21,7 @@ func RespFail(writer http.ResponseWriter,err error)  {
 }
 
 func Resp(code int,msg string,data interface{},writer http.ResponseWriter){
-	h := &loginresp{
+	h := &resp{
 		Code:code,
 		Msg:msg,
 		Data:data,
