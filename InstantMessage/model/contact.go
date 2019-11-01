@@ -18,6 +18,6 @@ type Contact struct {
 }
 
 type Args struct {
-	UserId  	int64 		`json:"user_id" form:"userid"`
-	DistId		int64 		`json:"dist_id"	form:"distid"`
+	UserId  	int64 		`json:"userid" form:"userid"`
+	DistId		int64 		`json:"distid"	form:"distid"`
 }

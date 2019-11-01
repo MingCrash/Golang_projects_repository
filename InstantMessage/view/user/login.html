@@ -52,17 +52,16 @@
             login:function(){
                 //检测手机号是否正确
                 //检测密码是否为空
-
                 //网络请求
                 //封装了promis
                 util.post("user/login",this.user).then(res=>{
-                    if(res.Code!==0){
+                    if(res.code!==0){           //code要根据接收到的结构体字样
                         mui.toast(res.msg)
                     }else{
-                        var url = "/chat/index.shtml?token="+res.Data.Token+"&id="+String(res.Data.id);
-                        location.replace(url);
+                        // var url = "/chat/index.shtml?token="+res.Data.Token+"&id="+String(res.Data.id);
+                        var url = "/chat/index.shtml?token="+res.data.token+"&id="+String(res.data.id);
                         mui.toast("登录成功,即将跳转");
-                        // location.href = url
+                        location.href = url
                     }
                 })
             },

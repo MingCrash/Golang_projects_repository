@@ -1,14 +1,13 @@
 package unit
 
 import (
-	"net/http"
-	"io/ioutil"
-	"strings"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"io/ioutil"
+	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -16,7 +15,7 @@ import (
 func Bind(req *http.Request,obj interface{}) error{
 	contentType := req.Header.Get("Content-Type")
 	//如果是简单的json
-	if strings.Contains(strings.ToLower(contentType),"application/json"){
+	if strings.Contains(strings.ToLower(contentType),"application/json") || strings.Contains(strings.ToLower(contentType),"text/plain") ||  strings.Contains(strings.ToLower(contentType),"text/html"){
 		return  BindJson(req,obj)
 	}
 	if strings.Contains(strings.ToLower(contentType),"application/x-www-form-urlencoded"){
@@ -36,7 +35,6 @@ func BindJson(req *http.Request,obj interface{}) error{
 
 func BindForm(req *http.Request,ptr interface{}) error{
 	_ = req.ParseForm()
-	fmt.Println(req.Form.Encode())
 	err := mapForm(ptr,req.Form)
 	return err
 }

@@ -2,7 +2,10 @@ package main
 
 import (
 	"./controller"
+	"encoding/json"
+	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -21,11 +24,25 @@ func RegistetViews()  {
 	}
 }
 
-func main() {
+type test struct {
+	UserId  	int64 		`json:"user_id" form:"userid"`
+	DistId		int64 		`json:"dist_id"	form:"distid"`
+}
+
+func main(){
 	//处理 通过API访问 的函数
 	http.HandleFunc("/user/login",controller.UserLogin)
+	http.HandleFunc("/user/logout",controller.UserLogout)
 	http.HandleFunc("/user/register",controller.UserRegister)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
+	http.HandleFunc("/testing/url", func(writer http.ResponseWriter, request *http.Request) {
+		var tmp test
+		v, _ := ioutil.ReadAll(request.Body)
+		fmt.Println(string(v))
+		err := json.Unmarshal(v, &tmp)
+		if err != nil{fmt.Println(err.Error())}
+		fmt.Println(tmp)
+	})
 
 	//提供静态资源目录支持,js,css等文件引用就靠这个了
 	http.Handle("/asset/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
@@ -35,5 +52,3 @@ func main() {
 
 	_ = http.ListenAndServe(":9090", nil)
 }
-
-

@@ -18,14 +18,15 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	//判断distId是否已注册用户
 	var tmpuser model.User
 	_, err = DBEngine.ID(distId).Get(&tmpuser)
-	if tmpuser.Id>0	{
+	if !(tmpuser.Id>0)	{
 		return errors.New("Target ID is not a registered user")
 	}
 
 	//查询是否已经是好友
 	//链式操作
 	var tmpcontact model.Contact
-	_, err = DBEngine.Where("ownerid=?", userId).And("dstodj=?", distId).And("cate",model.CONCAT_CATE_USER).Get(&tmpcontact)
+	//_, err = DBEngine.Where("ownerid=?", userId).And("dstodj=?", distId).And("cate",model.CONCAT_CATE_USER).Get(&tmpcontact)
+	_, err = DBEngine.Where("ownerid=? and dstodj= ? and cate= ?", userId, distId,model.CONCAT_CATE_USER).Get(&tmpcontact)
 	//如果存在记录说明已经是好友了不加
 	if tmpcontact.Id>0	{
 		return errors.New("Target ID is already your friend")
@@ -34,7 +35,6 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	//添加好友关系
 	//多数据操作都需要成功时候，需要使用事务来确保所有操作均成功后再做提交操作
 	//在有需要的批量操作数据时，事务的使用往往是必要的
-	_, err = DBEngine.InsertOne(&tmpcontact)
 	session := DBEngine.NewSession()
 	_ = session.Begin()
 	defer session.Close()

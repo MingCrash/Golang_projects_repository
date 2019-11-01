@@ -337,7 +337,7 @@
                         var user = userInfo();
 
                         post("/contact/addfriend",{dstid:dstobj,userid: user.id,pic:user.avatar,content:user.nickname,memo: "请求加你为好友"},function(res){
-                            if(res.code==200){
+                            if(res.code==0){
                                 mui.toast("添加成功");
                                 that.loadfriends();
                             }else{
