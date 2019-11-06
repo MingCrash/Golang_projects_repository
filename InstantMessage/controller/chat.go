@@ -2,16 +2,36 @@ package controller
 
 import (
 	"../unit"
+	"../model"
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
+	"gopkg.in/fatih/set.v0"
+	"log"
 	"net/http"
 	"strconv"
+	"sync"
+	_ "sync"
 )
+
+//chat服务的核心就是将userid与ConnNode 形成映射关系
+//定义client = map[userId][ConnNode]
+var clientMap map[int64]*ConnNode = make(map[int64]*ConnNode)
+
+var rwlocker sync.RWMutex
+
+type ConnNode struct {
+	Conn 		*websocket.Conn 	`json:"conn"`
+	//将结点接收到的可能性并行信息转换成串行信息,
+	DataQueue	chan []byte 		`json:"data_queue"`
+	GroupSet	set.Interface 		`json:"group_set"`
+}
 
 //	127.0.0.1/chat?id=xxx&token=xxx
 func Chat(writer http.ResponseWriter, request *http.Request)  {
 	//检查接入是否合法
-	query := request.URL.Query()							//读取url后带参数
+	query := request.URL.Query()			//读取url后带参数
 	id := query.Get("id")
 	toverified_token := query.Get("token")
 	toverified_id, err := strconv.ParseInt(id, 10, 64)
@@ -19,18 +39,78 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 		unit.RespFail(writer,err)
 		return
 	}
-	//fmt.Println(fmt.Sprintf("toverified_id:%d,toverified_token:%s", toverified_id, toverified_token))
-	//unit.RespSuccess(writer,isvalid)
 
+	isvalid, err := CheckToken(toverified_id,toverified_token)
+	if isvalid == false || err != nil {log.Println(err.Error())}
+
+	//把 http 请求升级为长连接的 WebSocket
 	conn, err := (&websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
-			isvalid,err := CheckToken(toverified_id,toverified_token)
-			if err != nil {	fmt.Println(err.Error())}
 			return isvalid
 		},
 	}).Upgrade(writer, request, nil)
 
+	//生成conn连接结点对象
+	var newnode = &ConnNode{
+		Conn:      		conn,
+		DataQueue: 		make(chan []byte,100),
+		GroupSet: 		set.New(set.ThreadSafe),
+	}
+	//建立映射关系
+	rwlocker.Lock()
+	clientMap[toverified_id] = newnode   //map同时read不会引发异常，同时read和write会异常，同时write会异常,Chat服务可能同时被调用，所以需要加读写锁
+	rwlocker.Unlock()
+
+	//启动目前用户的收发器独立运行协程
+	go SendCoro(newnode)
+	go RecvCoro(newnode)
 }
+
+func SendCoro(node *ConnNode)  {
+	for {
+		select {
+			case data := <- node.DataQueue:
+				err := node.Conn.WriteMessage(websocket.TextMessage, data)
+				if err != nil{
+					log.Println(err.Error())
+					return
+				}
+		}
+	}
+}
+
+func RecvCoro(node *ConnNode)  {
+	for {
+			_,data,err := node.Conn.ReadMessage()
+			//node.DataQueue <- data
+			Dispach(&data)
+			if err != nil{
+				log.Println(err.Error())
+				return
+			}
+		}
+}
+
+//解析接收到的json信息
+func Dispach(data *[]byte)  {
+	msg := model.Message{}
+	err := json.Unmarshal(*data,&msg)
+	if err != nil{
+		log.Println(err.Error())
+		return
+	}
+	switch msg.Cmd{
+		case model.CMD_SINGLE_MSG:
+			distuserId := clientMap[msg.Dstid]
+			err := tranferMsgto(distuserId,&msg)
+	}
+}
+
+func tranferMsgto(distId int64, message *model.Message) error {
+	return errors.New("dnffnf")
+}
+
+
 
 func CheckToken(userId int64,token string) (bool,error) {
 	user ,err := userService.FindUserBy(userId)
@@ -39,7 +119,6 @@ func CheckToken(userId int64,token string) (bool,error) {
 		return false,err
 	}
 	return true,err
-
 }
 
 

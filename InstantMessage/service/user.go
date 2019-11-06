@@ -60,7 +60,7 @@ func (us *UserService) Login(mobile,plainpwd string) (user *model.User,err error
 	return &tmp, nil
 }
 
-func (us *UserService) Logout(id,token string) (error){
+func (us *UserService) Logout(id int64, token string) (error) {
 	tmp :=model.User{}
 	//验证id，token是否同时找到
 	_, err := DBEngine.Where("id=? and token=?", id, token).Get(&tmp)
@@ -71,11 +71,13 @@ func (us *UserService) Logout(id,token string) (error){
 	//修改数据库online状态
 	if tmp.Id > 0 {
 		tmp.Online = false
-		_, _ = DBEngine.ID(id).Cols("online").Update(&tmp)
+		_, err = DBEngine.ID(id).Cols("online").Update(&tmp)
+		if err!=nil {
+			return err
+		}
 	}else {
-		return errors.New("Logout Fail")
+		return errors.New("退出登陆失败")
 	}
-
 	return nil
 }
 

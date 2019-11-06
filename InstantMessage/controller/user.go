@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"strconv"
 )
 const (
 	successStatus           = 200
@@ -56,13 +57,14 @@ func UserLogout(writer http.ResponseWriter, request *http.Request)  {
 	//_ = request.ParseForm()
 	//mobile := request.PostForm.Get("mobile")		//读取参数前需要解析
 	//passwd := request.PostForm.Get("passwd")
-	mobile := request.PostFormValue("id")	//调用时，已自动解析参数
-	plainpwd := request.PostFormValue("token")
-	var user, err = userService.Login(mobile,plainpwd)
+	id := request.PostFormValue("id")	//调用时，已自动解析参数
+	token := request.PostFormValue("token")
+	toverified_id, _ := strconv.ParseInt(id, 10, 64)
+	err := userService.Logout(toverified_id,token)
 	if err!=nil{
 		unit.RespFail(writer,err)
 	}else {
-		unit.RespSuccess(writer,user)
+		unit.RespSuccess(writer,nil)
 	}
 }
 

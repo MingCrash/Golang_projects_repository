@@ -1,14 +1,19 @@
 package main
 
 import (
-	"./controller"
 	"encoding/json"
 	"fmt"
+	"./controller"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
 )
+
+type test struct {
+	UserId  	int64 		`json:"user_id" form:"userid"`
+	DistId		int64 		`json:"dist_id"	form:"distid"`
+}
 
 //注册视图
 func RegistetViews()  {
@@ -24,17 +29,14 @@ func RegistetViews()  {
 	}
 }
 
-type test struct {
-	UserId  	int64 		`json:"user_id" form:"userid"`
-	DistId		int64 		`json:"dist_id"	form:"distid"`
-}
-
 func main(){
 	//处理 通过API访问 的函数
 	http.HandleFunc("/user/login",controller.UserLogin)
 	http.HandleFunc("/user/logout",controller.UserLogout)
 	http.HandleFunc("/user/register",controller.UserRegister)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
+	http.HandleFunc("/chat",controller.Chat)
+
 	http.HandleFunc("/testing/url", func(writer http.ResponseWriter, request *http.Request) {
 		var tmp test
 		v, _ := ioutil.ReadAll(request.Body)
