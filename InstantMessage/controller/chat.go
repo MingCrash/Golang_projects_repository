@@ -1,12 +1,11 @@
 package controller
 
 import (
-	"../unit"
 	"../model"
+	"../unit"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/pkg/errors"
 	"gopkg.in/fatih/set.v0"
 	"log"
 	"net/http"
@@ -61,7 +60,7 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	clientMap[toverified_id] = newnode   //map同时read不会引发异常，同时read和write会异常，同时write会异常,Chat服务可能同时被调用，所以需要加读写锁
 	rwlocker.Unlock()
 
-	//启动目前用户的收发器独立运行协程
+	//启动目前用户的收发器独立运行的协程
 	go SendCoro(newnode)
 	go RecvCoro(newnode)
 }
@@ -82,7 +81,6 @@ func SendCoro(node *ConnNode)  {
 func RecvCoro(node *ConnNode)  {
 	for {
 			_,data,err := node.Conn.ReadMessage()
-			//node.DataQueue <- data
 			Dispach(&data)
 			if err != nil{
 				log.Println(err.Error())
@@ -100,17 +98,23 @@ func Dispach(data *[]byte)  {
 		return
 	}
 	switch msg.Cmd{
+		//判断为私聊类型信息，根据目标id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_SINGLE_MSG:
-			distuserId := clientMap[msg.Dstid]
-			err := tranferMsgto(distuserId,&msg)
+			tranferMsgto(msg.Dstid,data)
+		//判断为群聊类型信息，根据目标群id,转发消息到目标connNode的dataqueue信息通道上
+		case model.CMD_ROOM_MSG:
+			log.Println("case CMD_ROOM_MSG")
 	}
 }
 
-func tranferMsgto(distId int64, message *model.Message) error {
-	return errors.New("dnffnf")
+func tranferMsgto(distid int64, data *[]byte) {
+	rwlocker.RLock()
+	distUserNode,ok := clientMap[distid]
+	rwlocker.RUnlock()
+	if ok {
+		distUserNode.DataQueue <- *data
+	}
 }
-
-
 
 func CheckToken(userId int64,token string) (bool,error) {
 	user ,err := userService.FindUserBy(userId)
