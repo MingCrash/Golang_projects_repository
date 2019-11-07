@@ -374,9 +374,13 @@
                         document.querySelector('.mui-popup-input input').type = 'number';
                     },
                     quit:function () {
-                        sessionStorage.removeItem("userid")
-                        sessionStorage.removeItem("userinfo")
-                        location.href="login.shtml"
+                        sessionStorage.removeItem("userid");
+                        sessionStorage.removeItem("userinfo");
+                        var user = userInfo();
+                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},function(res) {
+
+                        };
+                        location.href="/user/login.shtml"
                     }
 
 

@@ -4,7 +4,6 @@ import (
 	"../model"
 	"../unit"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/fatih/set.v0"
 	"log"
@@ -39,8 +38,14 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 		return
 	}
 
-	isvalid, err := CheckToken(toverified_id,toverified_token)
-	if isvalid == false || err != nil {log.Println(err.Error())}
+	isvalid:= CheckToken(toverified_id,toverified_token)
+	if isvalid {
+		//golang判断key是否在map中
+		if _, ok := clientMap[toverified_id]; ok{
+			unit.RespSuccess(writer,"该UserId已加入即时对话名单中")
+			return
+		}
+	}
 
 	//把 http 请求升级为长连接的 WebSocket
 	conn, err := (&websocket.Upgrader{
@@ -48,7 +53,10 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 			return isvalid
 		},
 	}).Upgrade(writer, request, nil)
-
+	if err != nil{
+		unit.RespFail(writer,err)
+		return
+	}
 	//生成conn连接结点对象
 	var newnode = &ConnNode{
 		Conn:      		conn,
@@ -103,7 +111,10 @@ func Dispach(data *[]byte)  {
 			tranferMsgto(msg.Dstid,data)
 		//判断为群聊类型信息，根据目标群id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_ROOM_MSG:
-			log.Println("case CMD_ROOM_MSG")
+			log.Println("接收到群聊类型消息")
+		//判断为心跳类型信息，
+		case model.CMD_HEART:
+			log.Println("接收到心跳类型消息")
 	}
 }
 
@@ -116,13 +127,12 @@ func tranferMsgto(distid int64, data *[]byte) {
 	}
 }
 
-func CheckToken(userId int64,token string) (bool,error) {
-	user ,err := userService.FindUserBy(userId)
+func CheckToken(userId int64,token string) (bool) {
+	user ,_ := userService.FindUserBy(userId)
 	if user != nil && user.Token != token {
-		fmt.Println(user.Token)
-		return false,err
+		return false
 	}
-	return true,err
+	return true
 }
 
 
