@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type test struct {
@@ -23,6 +24,9 @@ func RegistetViews()  {
 		tplname := v.Name()
 		//注册handler
 		http.HandleFunc(tplname, func(writer http.ResponseWriter, request *http.Request) {
+				if strings.Contains(tplname,"/chat/index") {
+
+				}
 				err = v.ExecuteTemplate(writer, tplname, nil)
 				if err != nil {log.Fatal("Execute Template Failture"+err.Error())}
 		})
@@ -35,6 +39,8 @@ func main(){
 	http.HandleFunc("/user/logout",controller.UserLogout)
 	http.HandleFunc("/user/register",controller.UserRegister)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
+	http.HandleFunc("contact/friend",controller.ContactFriend)
+
 	http.HandleFunc("/chat",controller.Chat)
 
 	http.HandleFunc("/testing/url", func(writer http.ResponseWriter, request *http.Request) {

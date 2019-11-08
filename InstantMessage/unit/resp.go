@@ -13,7 +13,7 @@ type resp struct {
 }
 
 func RespSuccess(writer http.ResponseWriter,data interface{})  {
-	Resp(0,"",data,writer)
+	Resp(200,"",data,writer)
 }
 
 func RespFail(writer http.ResponseWriter,err error)  {
