@@ -60,7 +60,7 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	//生成conn连接结点对象
 	var newnode = &ConnNode{
 		Conn:      		conn,
-		DataQueue: 		make(chan []byte,100),
+		DataQueue: 		make(chan []byte,30),
 		GroupSet: 		set.New(set.ThreadSafe),
 	}
 	//建立映射关系
