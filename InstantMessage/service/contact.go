@@ -12,14 +12,14 @@ type ContactService struct {
 func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	//判断是否自己加自己
 	if userId == distId{
-		return errors.New("can't add yourself as a friend")
+		return errors.New("不能够加自己为好友")
 	}
 
 	//判断distId是否已注册用户
 	var tmpuser model.User
 	_, err = DBEngine.ID(distId).Get(&tmpuser)
 	if !(tmpuser.Id>0)	{
-		return errors.New("Target ID is not a registered user")
+		return errors.New("目标用户非注册用户")
 	}
 
 	//查询是否已经是好友
@@ -29,7 +29,7 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	_, err = DBEngine.Where("ownerid=? and dstodj= ? and cate= ?", userId, distId,model.CONCAT_CATE_USER).Get(&tmpcontact)
 	//如果存在记录说明已经是好友了不加
 	if tmpcontact.Id>0	{
-		return errors.New("Target ID is already your friend")
+		return errors.New("目标用户已是你的好友")
 	}
 
 	//添加好友关系

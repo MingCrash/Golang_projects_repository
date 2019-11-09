@@ -334,10 +334,12 @@
                         document.querySelector('.mui-popup-input input').type = 'number';
                     },
                     _addfriend:function(dstobj){
-                        var user = userInfo();
-
-                        post("/contact/addfriend",{dstid:dstobj,userid: user.id,pic:user.avatar,content:user.nickname,memo: "请求加你为好友"},function(res){
-                            if(res.code==0){
+                        var that = this;
+                        token = sessionStorage.getItem("token");
+                        id = sessionStorage.getItem("id");
+                        // post("/contact/addfriend",{dstid:dstobj,userid:id,pic:user.avatar,content:user.nickname,memo: "请求加你为好友"},function(res){
+                        post("contact/addfriend",{distid:dstobj,userid:id},function(res){
+                            if(res.code==200){
                                 mui.toast("添加成功");
                                 that.loadfriends();
                             }else{
@@ -377,10 +379,11 @@
                         sessionStorage.removeItem("userid");
                         sessionStorage.removeItem("userinfo");
                         var user = userInfo();
-                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},function(res) {
-
-                        };
-                        location.href="/user/login.shtml"
+                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},
+                            function(res) {
+                                alert(String(res.code)+"退出操作被执行了！")
+                        });
+                        location.href="/user/login.shtml";
                     }
 
 
