@@ -32,7 +32,7 @@ func UserRegister(writer http.ResponseWriter, request *http.Request)  {
 		unit.RespFail(writer,err)
 	}else{
 		writer.WriteHeader(successStatus)
-		unit.RespSuccess(writer,*newuser)
+		unit.RespSuccess(writer,&newuser)
 	}
 }
 
@@ -48,7 +48,7 @@ func UserLogin(writer http.ResponseWriter, request *http.Request)  {
 	if err!=nil{
 		unit.RespFail(writer,err)
 	}else {
-		unit.RespSuccess(writer,user)
+		unit.RespSuccess(writer,*user)
 	}
 }
 

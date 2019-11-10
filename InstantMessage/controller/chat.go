@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
-	_ "sync"
 )
 
 //chat服务的核心就是将userid与ConnNode 形成映射关系

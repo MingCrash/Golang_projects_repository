@@ -38,7 +38,7 @@
                     msglist:[],
 
                     msgcontext:{
-                        dstid:10,
+                        dstid:0,
                         cmd:10,
                         userid:userId()
                     },
@@ -105,6 +105,8 @@
 
                         this.profile.memo = user.memo;
                         var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +user.token;
+                        console.log(url);
+                        console.log(user);
                         this.webSocket=new WebSocket(url);
                         this.initwebsocket()
                     }
@@ -134,7 +136,7 @@
                             }
                         }
                         if(!suporttype){
-                            mui.toast("编码不支持")
+                            mui.toast("编码不支持");
                             return ;
                         }
                         this.duration = new Date().getTime();
@@ -233,6 +235,7 @@
                         var msg =this.createmsgcontext();
                         msg.media=1;
                         msg.content=txt;
+                        console.log(msg);
                         this.showmsg(userInfo(),msg);
                         this.webSocket.send(JSON.stringify(msg))
                     },
@@ -241,7 +244,7 @@
                         var msg =this.createmsgcontext();
                         msg.media=4;
                         msg.url=picurl;
-                        this.showmsg(userInfo(),msg)
+                        this.showmsg(userInfo(),msg);
                         this.webSocket.send(JSON.stringify(msg))
                     },
                     sendaudiomsg:function(url,num){
@@ -250,12 +253,12 @@
                         msg.media=3;
                         msg.url=url;
                         msg.amount = num;
-                        this.showmsg(userInfo(),msg)
+                        this.showmsg(userInfo(),msg);
                         console.log("sendaudiomsg",this.msglist);
                         this.webSocket.send(JSON.stringify(msg))
                     },
                     singlemsg:function(user){
-                        console.log(user)
+                        console.log(user);
                         this.win = "single";
                         this.title = "和"+user.nickname+"聊天中";
                         this.msgcontext.dstid = user.id;
@@ -303,10 +306,10 @@
                     loadfriends:function(){
                         var that = this;
                         post("contact/friend",{userid:userId()},function(res){
-                            that.friends = res.rows ||[];
+                            that.friends = res.data ||[];
                             var usermap = usermap;
-                            for(var i in res.rows){
-                                usermap[res.rows[i].id]=res.rows[i];
+                            for(var i in res.data){
+                                usermap[res.data[i].id]=res.data[i];
                             }
                             this.usermap = usermap;
                         }.bind(this))
@@ -379,9 +382,12 @@
                         sessionStorage.removeItem("userid");
                         sessionStorage.removeItem("userinfo");
                         var user = userInfo();
-                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},
-                            function(res) {
-                                alert(String(res.code)+"退出操作被执行了！")
+                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},function(res) {
+                                if (res.code == 200){
+                                    sessionStorage.clear();
+                                    mui.toast(String(res.code)+"退出操作被执行了！");
+                                    location.href = ""
+                                }
                         });
                         location.href="/user/login.shtml";
                     }

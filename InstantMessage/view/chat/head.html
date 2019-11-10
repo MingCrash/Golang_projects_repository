@@ -2,14 +2,14 @@
 <script>
     function userId(id){
         if(typeof  id =="undefined"){
-            var r = sessionStorage.getItem("userid");
+            var r = sessionStorage.getItem("id");
             if(!r){
                 return 0;
             }else{
                 return parseInt(r)
             }
         }else{
-            sessionStorage.setItem("userid",id);
+            sessionStorage.setItem("id",id);
         }
     }
     function userInfo(o){

@@ -43,7 +43,7 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 		Dstodj:   distId,
 		Cate:     model.CONCAT_CATE_USER,
 		Memo:     "",
-		Createat: time.Time{},
+		Createat: time.Now(),
 	})
 
 	_, err2 := session.InsertOne(model.Contact{
@@ -51,7 +51,7 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 		Dstodj:   userId,
 		Cate:     model.CONCAT_CATE_USER,
 		Memo:     "",
-		Createat: time.Time{},
+		Createat: time.Now(),
 	})
 	if err1 == nil && err2 == nil {
 		_ = session.Commit()
@@ -68,3 +68,17 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	//返回数据
 	return nil
 }
+
+func (us *ContactService) Loadfriend(userId int64) (*[]model.Contact,error) {
+	tmpcontact := make([]model.Contact,0)
+	//链式操作
+	err := DBEngine.Where("ownerid=?", userId).Find(&tmpcontact)
+	if err != nil {
+		return nil,err
+	}else if len(tmpcontact) == 0{
+		return nil, errors.New("用户没有任何好友")
+	}
+	//返回数据
+	return &tmpcontact,nil
+}
+
