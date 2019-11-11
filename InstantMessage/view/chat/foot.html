@@ -36,7 +36,6 @@
                         choosed:{"pkgid":"emoj","assets":[],"size":"small"}
                     },
                     msglist:[],
-
                     msgcontext:{
                         dstid:0,
                         cmd:10,
@@ -49,7 +48,6 @@
                             id:"upload",
                             slot:"<input accept=\"image/gif,image/jpeg,,image/png\" type=\"file\" onchange=\"upload(this)\" class='upload' />"
                         },
-
                         {
                             icon:"/asset/images/camera.png",
                             name:"拍照",
@@ -86,7 +84,6 @@
                             name:"名片",
                             id:"person"
                         }
-
                     ],
                     timer:0,
                     recorder:{},
@@ -99,14 +96,14 @@
                     this.loadcommunitys();
                     this.loaddoutures();
                     var user = userInfo();
+                    console.log(user);
                     if(!!user){
+                        console.log("验证通过，执行标志");
                         this.profile.avatar = user.avatar;
                         this.profile.nickname = user.nickname;
-
                         this.profile.memo = user.memo;
                         var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +user.token;
                         console.log(url);
-                        console.log(user);
                         this.webSocket=new WebSocket(url);
                         this.initwebsocket()
                     }
@@ -152,7 +149,7 @@
                                             this.sendaudiomsg(res.data,duration);
                                             console.log("attach/upload",res.data)
                                         })
-                                    }
+                                    };
                                     this.recorder.start();
                                 }).catch(function(err){
                             mui.toast(err.msg)
@@ -191,15 +188,15 @@
                         }
                         var that = this;
                         for(var id in res){
-                            console.log("res[i]",id,res[id])
+                            console.log("res[i]",id,res[id]);
                             post(res[id],{},function(pkginfo){
-                                console.log("post res[i]",id,res[id],pkginfo)
-                                var baseurl= config.baseurl+"/"+pkginfo.id+"/"
+                                console.log("post res[i]",id,res[id],pkginfo);
+                                var baseurl= config.baseurl+"/"+pkginfo.id+"/";
                                 for(var j in pkginfo.assets){
                                     pkginfo.assets[j] = baseurl+pkginfo.assets[j];
                                 }
                                 pkginfo.icon = baseurl + pkginfo.icon;
-                                that.doutu.packages.push(pkginfo)
+                                that.doutu.packages.push(pkginfo);
                                 if(that.doutu.choosed.pkgid==pkginfo.id){
                                     that.doutu.choosed.assets=pkginfo.assets;
                                 }
@@ -211,14 +208,12 @@
                         mui.alert("请加微信号jiepool-winlion索取")
                     } ,
                     showmsg:function(user,msg){
-                        var data={
-
-                        }
+                        var data={};
                         data.ismine = userId()==msg.userid;
-                        console.log(data.ismine,userId(),msg.userid)
+                        console.log(data.ismine,userId(),msg.userid);
                         data.user = user;
                         data.msg = msg;
-                        this.msglist = this.msglist.concat(data)
+                        this.msglist = this.msglist.concat(data);
                         this.reset();
                         var that =this;
                         that.timer = setTimeout(function(){
@@ -235,9 +230,12 @@
                         var msg =this.createmsgcontext();
                         msg.media=1;
                         msg.content=txt;
-                        console.log(msg);
                         this.showmsg(userInfo(),msg);
-                        this.webSocket.send(JSON.stringify(msg))
+                        console.log(msg);
+                        console.log(userInfo());
+                        tmp = JSON.stringify(msg);
+                        this.webSocket.send(JSON.stringify(msg));
+                        console.log(tmp,typeof tmp);
                     },
                     sendpicmsg:function(picurl){
                         //{id:1,userid:2,dstid:3,cmd:10,media:4,url:"http://www.baidu.com/a/log,jpg"}
@@ -260,8 +258,9 @@
                     singlemsg:function(user){
                         console.log(user);
                         this.win = "single";
-                        this.title = "和"+user.nickname+"聊天中";
-                        this.msgcontext.dstid = user.id;
+                        this.title = user.nickname;
+                        // this.msgcontext.dstid = user.id;
+                        this.msgcontext.dstid = user.dstodj;
                         this.msgcontext.cmd = 10;
                     },
                     groupmsg:function(group){
@@ -307,10 +306,12 @@
                         var that = this;
                         post("contact/friend",{userid:userId()},function(res){
                             that.friends = res.data ||[];
-                            var usermap = usermap;
+                            // var usermap = usermap;
+                            var usermap = {};
                             for(var i in res.data){
                                 usermap[res.data[i].id]=res.data[i];
                             }
+                            console.log(usermap);
                             this.usermap = usermap;
                         }.bind(this))
                     },
@@ -379,17 +380,13 @@
                         document.querySelector('.mui-popup-input input').type = 'number';
                     },
                     quit:function () {
-                        sessionStorage.removeItem("userid");
-                        sessionStorage.removeItem("userinfo");
-                        var user = userInfo();
-                        post("/user/logout",{id:sessionStorage.getItem("userid"),token:sessionStorage.getItem("token")},function(res) {
+                        post("/user/logout",{id:sessionStorage.getItem("id"),token:sessionStorage.getItem("token")},function(res) {
                                 if (res.code == 200){
                                     sessionStorage.clear();
                                     mui.toast(String(res.code)+"退出操作被执行了！");
-                                    location.href = ""
+                                    location.href="/user/login.shtml";
                                 }
                         });
-                        location.href="/user/login.shtml";
                     }
 
 
