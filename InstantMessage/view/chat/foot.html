@@ -6,9 +6,22 @@
             if(res.code==200){
                 app.sendpicmsg(res.data)
             }
-
         })
     }
+    var heartCheck = {
+        timeout:3000,
+        timeoutObject:null,
+        serverTimeoutObject:null,
+        stop:function (id_of_interval) {
+            clearInterval(id_of_interval)
+        },
+        start:function () {
+            setInterval(function () {
+
+            })
+        }
+    };
+
     var app=new Vue(
             {
                 el:"#pageapp",
@@ -90,27 +103,25 @@
                     allChunks:[],
                     iscomplete:false,
                     duration:0,
+
                 },
                 created:function(){
                     this.loadfriends();
                     this.loadcommunitys();
                     this.loaddoutures();
                     var user = userInfo();
-                    console.log(user);
                     if(!!user){
-                        console.log("验证通过，执行标志");
                         this.profile.avatar = user.avatar;
                         this.profile.nickname = user.nickname;
                         this.profile.memo = user.memo;
                         var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +user.token;
-                        console.log(url);
+                        console.log("验证通过,根据URL创建WebSocket");
                         this.webSocket=new WebSocket(url);
-                        this.initwebsocket()
+                        this.initwebsocket();
                     }
 
                 },
                 mounted:function(){
-
                 },
                 methods:{
                     playaudio:function(url){
@@ -210,7 +221,6 @@
                     showmsg:function(user,msg){
                         var data={};
                         data.ismine = userId()==msg.userid;
-                        console.log(data.ismine,userId(),msg.userid);
                         data.user = user;
                         data.msg = msg;
                         this.msglist = this.msglist.concat(data);
@@ -231,11 +241,11 @@
                         msg.media=1;
                         msg.content=txt;
                         this.showmsg(userInfo(),msg);
-                        console.log(msg);
-                        console.log(userInfo());
                         tmp = JSON.stringify(msg);
+                        console.log("发出数据:"+msg.content);
                         this.webSocket.send(JSON.stringify(msg));
-                        console.log(tmp,typeof tmp);
+                        //重置心跳
+
                     },
                     sendpicmsg:function(picurl){
                         //{id:1,userid:2,dstid:3,cmd:10,media:4,url:"http://www.baidu.com/a/log,jpg"}
@@ -289,16 +299,28 @@
 
                     },
                     initwebsocket:function(){
+                        this.webSocket.onopen = function () {
+                            console.log("握手成功");
+                            //启动心跳
+                        };
                         this.webSocket.onmessage = function(evt){
+                            console.log('收到消息');
+                            //重置一次心跳
                             this.onmessage(JSON.parse(evt.data));
-                        }.bind(this)
+                        }.bind(this);
                         this.webSocket.onclose=function (evt) {
-                            console.log(evt.data)
-                        }
+                            console.log('链接关闭');
+                            //关闭心跳
+                            console.log(evt.data);
+                            // reconnect(wsUrl);
+                        };
                         this.webSocket.onerror=function (evt) {
-                            console.log(evt.data)
+                            console.log(evt.data);
+                            console.log('发生异常了');
+                            // reconnect(wsUrl);
                         }
                     },
+
                     sendmsg:function(){
 
                     },
@@ -383,8 +405,10 @@
                         post("/user/logout",{id:sessionStorage.getItem("id"),token:sessionStorage.getItem("token")},function(res) {
                                 if (res.code == 200){
                                     sessionStorage.clear();
-                                    mui.toast(String(res.code)+"退出操作被执行了！");
+                                    mui.toast("退出成功");
                                     location.href="/user/login.shtml";
+                                }else {
+                                    mui.toast("退出不成功");
                                 }
                         });
                     }

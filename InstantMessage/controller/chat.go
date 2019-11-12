@@ -4,6 +4,7 @@ import (
 	"../model"
 	"../unit"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"gopkg.in/fatih/set.v0"
 	"log"
@@ -100,6 +101,7 @@ func RecvCoro(node *ConnNode)  {
 func Dispach(data *[]byte)  {
 	msg := model.Message{}
 	err := json.Unmarshal(*data,&msg)
+	fmt.Println(msg)
 	if err != nil{
 		log.Println(err.Error())
 		return
@@ -113,7 +115,7 @@ func Dispach(data *[]byte)  {
 			log.Println("接收到群聊类型消息")
 		//判断为心跳类型信息，
 		case model.CMD_HEART:
-			log.Println("接收到心跳类型消息")
+			log.Println(fmt.Sprintf("接收到来自%s心跳消息",msg.Dstid))
 	}
 }
 
@@ -123,6 +125,8 @@ func tranferMsgto(distid int64, data *[]byte) {
 	rwlocker.RUnlock()
 	if ok {
 		distUserNode.DataQueue <- *data
+	}else{
+		fmt.Println("Warning：消息转发失败，在用户列表中找不到对应的目标Id")
 	}
 }
 
