@@ -112,10 +112,10 @@ func Dispach(data *[]byte)  {
 			tranferMsgto(msg.Dstid,data)
 		//判断为群聊类型信息，根据目标群id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_ROOM_MSG:
-			log.Println("接收到群聊类型消息")
+			fmt.Println("接收到群聊类型消息")
 		//判断为心跳类型信息，
 		case model.CMD_HEART:
-			log.Println(fmt.Sprintf("接收到来自%s心跳消息",msg.Dstid))
+			fmt.Println(fmt.Sprintf("接收到来自%s心跳消息",msg.Dstid))
 	}
 }
 
