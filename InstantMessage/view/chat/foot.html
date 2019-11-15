@@ -41,7 +41,7 @@
     //     }
     // };
 
-
+    var tester = "zhuzhiming";
     var app=new Vue(
             {
                 el:"#pageapp",
@@ -124,7 +124,7 @@
                     iscomplete:false,
                     duration:0,
                     id_of_interval:null,
-                    timeout:5000,
+                    timeout:15000,
                 },
                 created:function(){
                     this.loadfriends();
@@ -140,37 +140,33 @@
                         console.log("验证通过,根据URL创建WebSocket");
                         this.webSocket=new WebSocket(url);
                         this.initwebsocket();
+                        console.log(this);
                         this.startcheck();
                     }
-
                 },
                 mounted:function(){
                 },
                 methods:{
                     startcheck:function(){
                         console.log("进入心跳计时器函数");
-                        if (!!this.id_of_interval) {
-                            console.log("清除心跳计时器");
-                            clearInterval(this.id_of_interval);
-                        }
-                        console.log("设置心跳计时器");
                         this.id_of_interval = setInterval(function () {
                             console.log("执行心跳计时器处理函数");
-                            var msg = this.createmsgcontext();
+                            var msg = JSON.parse(JSON.stringify(this.msgcontext));
                             msg.media = 1;
                             msg.cmd = 0;
                             msg.content = "ping";
                             this.webSocket.send(JSON.stringify(msg));
-                        }, this.timeout)
+                        }, this.timeout);
+                        return app;
                     },
-                    stopcheck:function() {
+                    stopcheck:function(){
                         if (!!this.id_of_interval) {
                             console.log("清除心跳计时器");
                             clearInterval(this.id_of_interval);
                         } else {
                             console.log("目前没有定时器运行，无重置目标");
                         }
-                        return this;
+                        return app;
                     },
                     playaudio:function(url){
                         document.getElementById('audio4play').src = url;
@@ -290,7 +286,7 @@
                         msg.content=txt;
                         this.showmsg(userInfo(),msg);
                         tmp = JSON.stringify(msg);
-                        console.log("发出数据:"+msg.content);
+                        console.log("发出数据:"+msg.content+String(msg.dstid));
                         this.webSocket.send(JSON.stringify(msg));
                         //重置心跳
                         this.stopcheck().startcheck()
@@ -348,18 +344,17 @@
                     },
                     initwebsocket:function(){
                         this.webSocket.onopen = function () {
-                            console.log("握手成功");
-                            //启动心跳
+                            console.log("webSocket握手成功");
                             this.startcheck();
                         };
                         this.webSocket.onmessage = function(evt){
-                            console.log('收到消息');
+                            console.log('webSocket收到消息');
                             //重置一次心跳
                             this.onmessage(JSON.parse(evt.data));
                             this.stopcheck().startcheck();
                         }.bind(this);
                         this.webSocket.onclose=function (evt) {
-                            console.log('链接关闭');
+                            console.log('webSocket链接关闭');
                             //关闭心跳
                             this.stopcheck();
                             console.log(evt.data);
@@ -367,7 +362,7 @@
                         };
                         this.webSocket.onerror=function (evt) {
                             console.log(evt.data);
-                            console.log('发生异常了');
+                            console.log('webSocket发生异常了');
                             // reconnect(wsUrl);
                         }
                     },
@@ -461,13 +456,11 @@
                                     mui.toast("退出不成功");
                                 }
                         });
-                    }
-
-
+                    },
                 },
                 watch:{
                     "win":function(n,o){
-                        console.log("watch",o,n)
+                        console.log("watch",o,n);
                         if(n!="main"){
                             document.getElementById("menubar").style.display="none";
                         }else{
