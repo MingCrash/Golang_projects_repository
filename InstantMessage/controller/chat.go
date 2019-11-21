@@ -116,6 +116,8 @@ func Dispach(data *[]byte)  {
 		//判断为心跳类型信息，
 		case model.CMD_HEART:
 			fmt.Println(fmt.Sprintf("接收到来自%s心跳消息",msg.Dstid))
+			tranferMsgto(msg.)
+
 	}
 }
 

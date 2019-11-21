@@ -8,40 +8,32 @@
             }
         })
     }
-    // var heartCheck = {
-    //     timeout:3000,
-    //     timeoutObject:null,
-    //     serverTimeoutObject:null,
-    //     start:function() {
-    //         console.log("进入心跳计时器函数");
-    //         if (this.id_of_interval == null) {
-    //             console.log("设置心跳计时器");
-    //             this.id_of_interval = setInterval(function () {
-    //                 console.log("执行心跳计时器处理函数");
-    //                 var msg = this.createmsgcontext();
-    //                 msg.media = 1;
-    //                 msg.cmd = 0;
-    //                 msg.content = "ping";
-    //                 this.webSocket.send(JSON.stringify(msg));
-    //             }, this.timeout)
-    //         } else {
-    //             console.log("清除心跳计时器");
-    //             clearInterval(this.id_of_interval);
-    //         }
-    //         return this;
-    //     },
-    //     stop:function() {
-    //         if (this.id_of_interval == null) {
-    //             console.log("目前没有定时器运行，无重置目标");
-    //         } else {
-    //             console.log("清除心跳计时器");
-    //             clearInterval(this.id_of_interval);
-    //         }
-    //         return this;
-    //     }
-    // };
+    var heartCheck = {
+        timeout:30000,
+        id_of_interval:null,
+        timeoutObject:null,
+        serverTimeoutObject:null,
+        start:function() {
+            if (this.id_of_interval == null) {
+                this.id_of_interval = setInterval(function () {
+                    var msg = app.createmsgcontext();
+                    msg.media = 1;
+                    msg.cmd = 0;
+                    msg.content = "ping";
+                    app.webSocket.send(JSON.stringify(msg));
+                }, this.timeout)
+            }
+            return this;
+        },
+        stop:function() {
+            if (this.id_of_interval != null) {
+                clearInterval(this.id_of_interval);
+                this.id_of_interval = null
+            }
+            return this;
+        }
+    };
 
-    var tester = "zhuzhiming";
     var app=new Vue(
             {
                 el:"#pageapp",
@@ -123,8 +115,6 @@
                     allChunks:[],
                     iscomplete:false,
                     duration:0,
-                    id_of_interval:null,
-                    timeout:15000,
                 },
                 created:function(){
                     this.loadfriends();
@@ -140,33 +130,17 @@
                         console.log("验证通过,根据URL创建WebSocket");
                         this.webSocket=new WebSocket(url);
                         this.initwebsocket();
-                        console.log(this);
-                        this.startcheck();
                     }
                 },
                 mounted:function(){
                 },
                 methods:{
-                    startcheck:function(){
-                        console.log("进入心跳计时器函数");
-                        this.id_of_interval = setInterval(function () {
-                            console.log("执行心跳计时器处理函数");
-                            var msg = JSON.parse(JSON.stringify(this.msgcontext));
-                            msg.media = 1;
-                            msg.cmd = 0;
-                            msg.content = "ping";
-                            this.webSocket.send(JSON.stringify(msg));
-                        }, this.timeout);
-                        return app;
-                    },
-                    stopcheck:function(){
-                        if (!!this.id_of_interval) {
-                            console.log("清除心跳计时器");
-                            clearInterval(this.id_of_interval);
-                        } else {
-                            console.log("目前没有定时器运行，无重置目标");
+                    reconnect:function(){
+                        var user = userInfo();
+                        if(!!user) {
+                            var url = "ws://" + location.host + "/chat?id=" + userId() + "&token=" + user.token;
+                            this.webSocket = new WebSocket(url);
                         }
-                        return app;
                     },
                     playaudio:function(url){
                         document.getElementById('audio4play').src = url;
@@ -214,8 +188,6 @@
                         if(typeof this.recorder.stop=="function"){
                             this.recorder.stop();
                         }
-
-
                     },
                     dispatchplugin:function(item){
                         switch (item.id) {
@@ -289,7 +261,7 @@
                         console.log("发出数据:"+msg.content+String(msg.dstid));
                         this.webSocket.send(JSON.stringify(msg));
                         //重置心跳
-                        this.stopcheck().startcheck()
+                        heartCheck.stop().start()
                     },
                     sendpicmsg:function(picurl){
                         //{id:1,userid:2,dstid:3,cmd:10,media:4,url:"http://www.baidu.com/a/log,jpg"}
@@ -313,7 +285,6 @@
                         console.log(user);
                         this.win = "single";
                         this.title = user.nickname;
-                        // this.msgcontext.dstid = user.id;
                         this.msgcontext.dstid = user.dstodj;
                         this.msgcontext.cmd = 10;
                     },
@@ -336,7 +307,6 @@
                         }
                     },
                     onmessage:function(data){
-
                         this.loaduserinfo(data.userid,function(user){
                             this.showmsg(user,data)
                         }.bind(this))
@@ -345,25 +315,25 @@
                     initwebsocket:function(){
                         this.webSocket.onopen = function () {
                             console.log("webSocket握手成功");
-                            this.startcheck();
+                            heartCheck.start();
                         };
                         this.webSocket.onmessage = function(evt){
                             console.log('webSocket收到消息');
                             //重置一次心跳
                             this.onmessage(JSON.parse(evt.data));
-                            this.stopcheck().startcheck();
+                            heartCheck.stop().start();
                         }.bind(this);
                         this.webSocket.onclose=function (evt) {
                             console.log('webSocket链接关闭');
                             //关闭心跳
-                            this.stopcheck();
+                            heartCheck.stop();
                             console.log(evt.data);
-                            // reconnect(wsUrl);
+                            this.reconnect();
                         };
                         this.webSocket.onerror=function (evt) {
                             console.log(evt.data);
                             console.log('webSocket发生异常了');
-                            // reconnect(wsUrl);
+                            this.reconnect();
                         }
                     },
                     sendmsg:function(){
