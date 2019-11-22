@@ -89,7 +89,7 @@ func SendCoro(node *ConnNode)  {
 func RecvCoro(node *ConnNode)  {
 	for {
 			_,data,err := node.Conn.ReadMessage()
-			Dispach(&data)
+			Dispach(&data,node)
 			if err != nil{
 				log.Println(err.Error())
 				return
@@ -98,7 +98,7 @@ func RecvCoro(node *ConnNode)  {
 }
 
 //解析接收到的json信息
-func Dispach(data *[]byte)  {
+func Dispach(data *[]byte,selfnode *ConnNode)  {
 	msg := model.Message{}
 	err := json.Unmarshal(*data,&msg)
 	fmt.Println(msg)
@@ -109,19 +109,30 @@ func Dispach(data *[]byte)  {
 	switch msg.Cmd{
 		//判断为私聊类型信息，根据目标id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_SINGLE_MSG:
-			tranferMsgto(msg.Dstid,data)
+			TranferMsgto(msg.Dstid,data)
 		//判断为群聊类型信息，根据目标群id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_ROOM_MSG:
 			fmt.Println("接收到群聊类型消息")
 		//判断为心跳类型信息，
 		case model.CMD_HEART:
-			fmt.Println(fmt.Sprintf("接收到来自%s心跳消息",msg.Dstid))
-			tranferMsgto(msg.)
-
+			Pong(selfnode)
 	}
 }
 
-func tranferMsgto(distid int64, data *[]byte) {
+func Pong(selfnode *ConnNode)  {
+	msg := model.Message{}
+	msg.Content = "pong"
+	msg.Cmd = model.CMD_HEART
+	msg.Media = model.MEDIA_TYPE_TEXT
+	bytelist, err := json.Marshal(msg)
+	if err!=nil {
+		fmt.Println(err.Error())
+	}else{
+		selfnode.DataQueue <- bytelist
+	}
+}
+
+func TranferMsgto(distid int64, data *[]byte) {
 	rwlocker.RLock()
 	distUserNode,ok := clientMap[distid]
 	rwlocker.RUnlock()
