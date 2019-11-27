@@ -9,7 +9,7 @@
         })
     }
     var heartCheck = {
-        timeout:40000,
+        timeout:50000,
         id_of_interval:null,
         timeoutObject:null,
         serverTimeoutObject:null,
@@ -129,7 +129,6 @@
                         this.profile.nickname = user.nickname;
                         this.profile.memo = user.memo;
                         var url="ws://"+location.host+"/chat?id="+userId()+"&token=" +user.token;
-                        console.log("验证通过,根据URL创建WebSocket");
                         this.webSocket=new WebSocket(url);
                         this.initwebsocket();
                     }
@@ -260,7 +259,6 @@
                         msg.content=txt;
                         this.showmsg(userInfo(),msg);
                         tmp = JSON.stringify(msg);
-                        console.log("发出数据:"+msg.content+String(msg.dstid));
                         this.webSocket.send(JSON.stringify(msg));
                         //重置心跳
                         heartCheck.stop().start()
@@ -316,18 +314,15 @@
                     },
                     initwebsocket:function(){
                         this.webSocket.onopen = function () {
-                            console.log("webSocket握手成功");
                             heartCheck.start();
                         };
                         this.webSocket.onmessage = function(evt){
                             var jsondata = JSON.parse(evt.data);
-                            console.log('webSocket收到消息'+jsondata.content);
                             //重置一次心跳
                             this.onmessage(jsondata);
                             heartCheck.stop().start();
                         }.bind(this);
                         this.webSocket.onclose=function (evt) {
-                            console.log('webSocket链接关闭');
                             //关闭心跳
                             heartCheck.stop();
                             console.log(evt.data);
@@ -335,7 +330,6 @@
                         };
                         this.webSocket.onerror=function (evt) {
                             console.log(evt.data);
-                            console.log('webSocket发生异常了');
                             this.reconnect();
                         }
                     },

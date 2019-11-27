@@ -19,7 +19,7 @@ var clientMap map[int64]*ConnNode = make(map[int64]*ConnNode)
 var rwlocker sync.RWMutex
 
 type ConnNode struct {
-	Conn *websocket.Conn `json:"conn"`
+	Conn *websocket.Conn 	`json:"conn"`
 	DataQueue chan []byte   `json:"data_queue"`			//将结点接收到的可能性并行信息转换成串行信息,
 	KillQueue chan bool 	`json:"kill_queue"`
 	GroupSet  set.Interface `json:"group_set"`
@@ -38,13 +38,6 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	}
 
 	isvalid:= CheckToken(toverified_id,toverified_token)
-	if isvalid {
-		//golang判断key是否在map中
-		if _, ok := clientMap[toverified_id]; ok{
-			unit.RespSuccess(writer,"该UserId已加入即时对话名单中")
-			return
-		}
-	}
 
 	//把 http 请求升级为长连接的 WebSocket
 	conn, err := (&websocket.Upgrader{
@@ -61,10 +54,12 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	var newnode = &ConnNode{
 		Conn:      		conn,
 		DataQueue: 		make(chan []byte,30),
-		KillQueue:      make(chan bool),
+		KillQueue:      make(chan bool,1),
 		GroupSet: 		set.New(set.ThreadSafe),
 	}
 	//建立映射关系
+	//如果设置了一个写锁，那么其它读的线程以及写的线程都拿不到锁，这个时候，与互斥锁的功能相同
+	//如果设置了一个读锁，那么其它写的线程是拿不到锁的，但是其它读的线程是可以拿到锁
 	rwlocker.Lock()
 	clientMap[toverified_id] = newnode   //map同时read不会引发异常，同时read和write会异常，同时write会异常,Chat服务可能同时被调用，所以需要加读写锁
 	rwlocker.Unlock()
@@ -74,44 +69,38 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	go RecvCoro(newnode)
 
 	conn.SetCloseHandler(func(code int, text string) error {
-
+		//给 管道KillQueue 发送信号关闭收发器
 		newnode.KillQueue <- true
-
-
+		//清理map无用node
 		rwlocker.Lock()
-		delete(clientMap, toverified_id)
+		clientMap[toverified_id] = nil
 		rwlocker.Unlock()
-		return error()
+		return nil
 	})
 }
 
 func SendCoro(node *ConnNode)  {
 	for {
 		select {
+			case <- node.KillQueue:
+				return
 			case data := <- node.DataQueue:
 				err := node.Conn.WriteMessage(websocket.TextMessage, data)
 				if err != nil{
 					log.Println(err.Error())
 					return
 				}
-			case <- node.KillQueue:
-				return
 		}
 	}
 }
 
 func RecvCoro(node *ConnNode)  {
 	for {
-		select {
-			case <- node.KillQueue:
+			_,data,err := node.Conn.ReadMessage()
+			Dispach(&data,node)
+			if err != nil{
+				log.Println(err.Error())
 				return
-			default:
-				_,data,err := node.Conn.ReadMessage()
-				Dispach(&data,node)
-				if err != nil{
-					log.Println(err.Error())
-					return
-				}
 			}
 		}
 }
@@ -120,7 +109,6 @@ func RecvCoro(node *ConnNode)  {
 func Dispach(data *[]byte,selfnode *ConnNode)  {
 	msg := model.Message{}
 	err := json.Unmarshal(*data,&msg)
-	fmt.Println(msg)
 	if err != nil{
 		log.Println(err.Error())
 		return
@@ -152,7 +140,7 @@ func Pong(selfnode *ConnNode)  {
 }
 
 func TranferMsgto(distid int64, data *[]byte) {
-	rwlocker.RLock()
+	rwlocker.RLock()						//设置写锁
 	distUserNode,ok := clientMap[distid]
 	rwlocker.RUnlock()
 	if ok {

@@ -38,6 +38,7 @@ func main(){
 	http.HandleFunc("/user/login",controller.UserLogin)
 	http.HandleFunc("/user/logout",controller.UserLogout)
 	http.HandleFunc("/user/register",controller.UserRegister)
+	http.HandleFunc("/user/find",controller.UserFind)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
 	http.HandleFunc("/contact/friend",controller.ContactLoadFriend)
 	http.HandleFunc("/chat",controller.Chat)

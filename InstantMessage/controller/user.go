@@ -13,7 +13,6 @@ const (
 	notresourcefound_status = 403
 )
 
-
 func UserRegister(writer http.ResponseWriter, request *http.Request)  {
 	writer.Header().Set("Content-Type","json/xml")
 	//_ = request.ParseForm()
@@ -68,4 +67,13 @@ func UserLogout(writer http.ResponseWriter, request *http.Request)  {
 	}
 }
 
+func UserFind(writer http.ResponseWriter, request *http.Request) {
+	userId, _ := strconv.ParseInt(request.PostFormValue("id"),10,64)
+	user ,err := userService.FindUserBy(userId)
+	if err != nil{
+		unit.RespFail(writer,err)
+	}else {
+		unit.RespSuccess(writer,*user)
+	}
+}
 
