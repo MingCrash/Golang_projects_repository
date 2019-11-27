@@ -16,14 +16,13 @@ import (
 //chat服务的核心就是将userid与ConnNode 形成映射关系
 //定义client = map[userId][ConnNode]
 var clientMap map[int64]*ConnNode = make(map[int64]*ConnNode)
-
 var rwlocker sync.RWMutex
 
 type ConnNode struct {
-	Conn 		*websocket.Conn 	`json:"conn"`
-	//将结点接收到的可能性并行信息转换成串行信息,
-	DataQueue	chan []byte 		`json:"data_queue"`
-	GroupSet	set.Interface 		`json:"group_set"`
+	Conn *websocket.Conn `json:"conn"`
+	DataQueue chan []byte   `json:"data_queue"`			//将结点接收到的可能性并行信息转换成串行信息,
+	KillQueue chan bool 	`json:"kill_queue"`
+	GroupSet  set.Interface `json:"group_set"`
 }
 
 //	127.0.0.1/chat?id=xxx&token=xxx
@@ -57,10 +56,12 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 		unit.RespFail(writer,err)
 		return
 	}
+
 	//生成conn连接结点对象
 	var newnode = &ConnNode{
 		Conn:      		conn,
 		DataQueue: 		make(chan []byte,30),
+		KillQueue:      make(chan bool),
 		GroupSet: 		set.New(set.ThreadSafe),
 	}
 	//建立映射关系
@@ -68,9 +69,20 @@ func Chat(writer http.ResponseWriter, request *http.Request)  {
 	clientMap[toverified_id] = newnode   //map同时read不会引发异常，同时read和write会异常，同时write会异常,Chat服务可能同时被调用，所以需要加读写锁
 	rwlocker.Unlock()
 
-	//启动目前用户的收发器独立运行的协程
+	//启动目前用户的接收器协程与发送器协程
 	go SendCoro(newnode)
 	go RecvCoro(newnode)
+
+	conn.SetCloseHandler(func(code int, text string) error {
+
+		newnode.KillQueue <- true
+
+
+		rwlocker.Lock()
+		delete(clientMap, toverified_id)
+		rwlocker.Unlock()
+		return error()
+	})
 }
 
 func SendCoro(node *ConnNode)  {
@@ -82,17 +94,24 @@ func SendCoro(node *ConnNode)  {
 					log.Println(err.Error())
 					return
 				}
+			case <- node.KillQueue:
+				return
 		}
 	}
 }
 
 func RecvCoro(node *ConnNode)  {
 	for {
-			_,data,err := node.Conn.ReadMessage()
-			Dispach(&data,node)
-			if err != nil{
-				log.Println(err.Error())
+		select {
+			case <- node.KillQueue:
 				return
+			default:
+				_,data,err := node.Conn.ReadMessage()
+				Dispach(&data,node)
+				if err != nil{
+					log.Println(err.Error())
+					return
+				}
 			}
 		}
 }

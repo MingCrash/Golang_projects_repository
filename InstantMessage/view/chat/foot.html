@@ -9,7 +9,7 @@
         })
     }
     var heartCheck = {
-        timeout:30000,
+        timeout:40000,
         id_of_interval:null,
         timeoutObject:null,
         serverTimeoutObject:null,
@@ -17,9 +17,11 @@
             if (this.id_of_interval == null) {
                 this.id_of_interval = setInterval(function () {
                     var msg = app.createmsgcontext();
+                    msg.content = "ping";
+                    msg.userid = userId();
+                    msg.distid = userId();
                     msg.media = 1;
                     msg.cmd = 0;
-                    msg.content = "ping";
                     app.webSocket.send(JSON.stringify(msg));
                 }, this.timeout)
             }
@@ -318,9 +320,10 @@
                             heartCheck.start();
                         };
                         this.webSocket.onmessage = function(evt){
-                            console.log('webSocket收到消息');
+                            var jsondata = JSON.parse(evt.data);
+                            console.log('webSocket收到消息'+jsondata.content);
                             //重置一次心跳
-                            this.onmessage(JSON.parse(evt.data));
+                            this.onmessage(jsondata);
                             heartCheck.stop().start();
                         }.bind(this);
                         this.webSocket.onclose=function (evt) {
