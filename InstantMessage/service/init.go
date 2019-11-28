@@ -11,14 +11,14 @@ var  DBEngine  *xorm.Engine
 //init函数不能被其他函数调用，在main之前执行
 func init()  {
 	driverName := "mysql"
-	dataSourceName := "root:123456@(192.168.0.48:3306)/user_account?charset=utf8"
+	dataSourceName := "root:123456@(192.168.0.70:3306)/user_account?charset=utf8"
 	var err = errors.New("")
 	DBEngine,err = xorm.NewEngine(driverName,dataSourceName)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	//设置DBEngine
-	DBEngine.ShowSQL(true)
+	DBEngine.ShowSQL(false)
 	DBEngine.ShowExecTime(true)
 	DBEngine.SetMaxOpenConns(2)
 

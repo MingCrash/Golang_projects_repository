@@ -69,6 +69,10 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	return nil
 }
 
+func (us *ContactService) Joincommunity()  {
+
+}
+
 func (us *ContactService) Loadfriend(userId int64) (*[]model.Contact,error) {
 	tmpcontact := make([]model.Contact,0)
 	//链式操作

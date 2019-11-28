@@ -40,7 +40,10 @@ func main(){
 	http.HandleFunc("/user/register",controller.UserRegister)
 	http.HandleFunc("/user/find",controller.UserFind)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
+	http.HandleFunc("/contact/joincommunity")
+	http.HandleFunc("/contact/joincommunity")
 	http.HandleFunc("/contact/friend",controller.ContactLoadFriend)
+	http.HandleFunc("/attach/upload",controller.AttachUpload)
 	http.HandleFunc("/chat",controller.Chat)
 
 	http.HandleFunc("/testing/url", func(writer http.ResponseWriter, request *http.Request) {
@@ -54,6 +57,7 @@ func main(){
 
 	//提供静态资源目录支持,js,css等文件引用就靠这个了
 	http.Handle("/asset/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
+	http.Handle("/mnt/",http.FileServer(http.Dir(("."))))  //提供静态资源的目录地址 = http.Dir + pattern
 
 	//模板引擎将html与数据结合，并注册（需要静态资源目录 支持）
 	RegistetViews()

@@ -146,7 +146,7 @@ func TranferMsgto(distid int64, data *[]byte) {
 	if ok {
 		distUserNode.DataQueue <- *data
 	}else{
-		fmt.Println("Warning：消息转发失败，在用户列表中找不到对应的目标Id")
+		log.Println(fmt.Sprintf("distId:%d,msg:消息转发失败，在用户列表中找不到对应的目标Id",distid))
 	}
 }
 

@@ -32,6 +32,15 @@ func ContactAddfriend(writer http.ResponseWriter, request *http.Request)  {
 	}
 }
 
+func ContactJoincommunity(writer http.ResponseWriter, request *http.Request)  {
+
+	if err!=nil{
+		unit.RespFail(writer,err)
+	}else {
+		unit.RespSuccess(writer,nil)
+	}
+}
+
 func ContactLoadFriend(writer http.ResponseWriter, request *http.Request)  {
 	writer.Header().Set("Content-Type","json/xml")
 
