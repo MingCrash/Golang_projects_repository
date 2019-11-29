@@ -73,6 +73,14 @@ func (us *ContactService) Joincommunity()  {
 
 }
 
+func (us *ContactService) Createcommunity(comunInfo *model.Community) error {
+	_, err := DBEngine.InsertOne(comunInfo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (us *ContactService) Loadfriend(userId int64) (*[]model.Contact,error) {
 	tmpcontact := make([]model.Contact,0)
 	//链式操作
