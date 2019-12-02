@@ -12,6 +12,18 @@
             sessionStorage.setItem("id",id);
         }
     }
+    function userMobile(id){
+        if(typeof  id =="undefined"){
+            var r = sessionStorage.getItem("mobile");
+            if(!r){
+                return 0;
+            }else{
+                return parseInt(r)
+            }
+        }else{
+            sessionStorage.setItem("mobile",mobile);
+        }
+    }
     function userInfo(o){
         if(typeof  o =="undefined"){
             var r = sessionStorage.getItem("userinfo");

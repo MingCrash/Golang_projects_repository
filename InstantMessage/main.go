@@ -40,8 +40,10 @@ func main(){
 	http.HandleFunc("/user/register",controller.UserRegister)
 	http.HandleFunc("/user/find",controller.UserFind)
 	http.HandleFunc("/contact/addfriend",controller.ContactAddfriend)
-	http.HandleFunc("/contact/createcommunity",controller.ContactCreatecommunity)
-	http.HandleFunc("/contact/joincommunity",controller.ContactJoincommunity)
+	http.HandleFunc("/contact/deletefriend",controller.ContactDeletefriend)
+
+	//http.HandleFunc("/contact/createcommunity",controller.ContactCreatecommunity)
+	//http.HandleFunc("/contact/joincommunity",controller.ContactJoincommunity)
 	http.HandleFunc("/contact/friend",controller.ContactLoadFriend)
 	http.HandleFunc("/attach/upload",controller.AttachUpload)
 	http.HandleFunc("/chat",controller.Chat)

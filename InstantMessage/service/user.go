@@ -60,10 +60,10 @@ func (us *UserService) Login(mobile,plainpwd string) (user *model.User,err error
 	return &tmp, nil
 }
 
-func (us *UserService) Logout(id int64, token string) (error) {
+func (us *UserService) Logout(mobile int64, token string) (error) {
 	tmp :=model.User{}
 	//验证id，token是否同时找到
-	_, err := DBEngine.Where("id=? and token=?", id, token).Get(&tmp)
+	_, err := DBEngine.Where("mobile=? and token=?", mobile, token).Get(&tmp)
 	if err!=nil {
 		return err
 	}
@@ -71,7 +71,7 @@ func (us *UserService) Logout(id int64, token string) (error) {
 	//修改数据库online状态
 	if tmp.Id > 0 {
 		tmp.Online = false
-		_, err = DBEngine.ID(id).Cols("online").Update(&tmp)
+		_, err = DBEngine.ID(mobile).Cols("online").Update(&tmp)
 		if err!=nil {
 			return err
 		}
@@ -81,8 +81,8 @@ func (us *UserService) Logout(id int64, token string) (error) {
 	return nil
 }
 
-func (us *UserService) FindUserBy(userId int64) (*model.User,error) {
+func (us *UserService) FindUserBy(id int64) (*model.User,error) {
 	tmpuser := model.User{}
-	_, err := DBEngine.ID(userId).Get(&tmpuser)
+	_, err := DBEngine.ID(id).Get(&tmpuser)
 	return &tmpuser,err
 }

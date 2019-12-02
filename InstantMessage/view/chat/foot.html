@@ -285,7 +285,8 @@
                         console.log(user);
                         this.win = "single";
                         this.title = user.nickname;
-                        this.msgcontext.dstid = user.dstodj;
+                        // this.msgcontext.dstid = user.dstodj;
+                        this.msgcontext.dstid = user.id;
                         this.msgcontext.cmd = 10;
                     },
                     groupmsg:function(group){
@@ -338,7 +339,7 @@
                     },
                     loadfriends:function(){
                         var that = this;
-                        post("contact/friend",{userid:userId()},function(res){
+                        post("contact/friend",{userMobile:userMobile()},function(res){
                             that.friends = res.data ||[];
                             // var usermap = usermap;
                             var usermap = {};
@@ -357,7 +358,7 @@
                     },
                     addfriend:function(){
                         var that = this;
-                        mui.prompt('','请输入好友ID','加好友',['取消','确认'],function (e) {
+                        mui.prompt('','请输入好友注册号码','加好友',['取消','确认'],function (e) {
                             if (e.index == 1) {
                                 if (isNaN(e.value) || e.value <= 0) {
                                     mui.toast('格式错误');
@@ -371,12 +372,11 @@
                         },'div');
                         document.querySelector('.mui-popup-input input').type = 'number';
                     },
-                    _addfriend:function(dstobj){
+                    _addfriend:function(dstmobil){
                         var that = this;
-                        token = sessionStorage.getItem("token");
-                        id = sessionStorage.getItem("id");
+                        useridmobil = sessionStorage.getItem("mobile");
                         // post("/contact/addfriend",{dstid:dstobj,userid:id,pic:user.avatar,content:user.nickname,memo: "请求加你为好友"},function(res){
-                        post("contact/addfriend",{distid:dstobj,userid:id},function(res){
+                        post("contact/addfriend",{dstmobile:dstmobil,useridmobil:useridmobil},function(res){
                             if(res.code==200){
                                 mui.toast("添加成功");
                                 that.loadfriends();

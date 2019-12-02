@@ -8,12 +8,22 @@ const (
 )
 //用户关系表
 //好友和群都存在这个表里面
+type FriendsInfo struct {
+	Id 			int64 		`json:"id"`
+	Ownerid		int64 		`json:"ownerid"`
+	Dstodj		int64 		`json:"dstodj"`
+	Cate		int 		`json:"cate"`
+	Avatar      string 		`json:"avatar"`
+	Memo        string 		`json:"memo"`
+	Nickname	string 		`json:"nickname"`
+	Createat 	time.Time	`json:"createat"`
+}
+
 type Contact struct {
 	Id 			int64 		`json:"id"`
 	Ownerid		int64 		`json:"ownerid"`
 	Dstodj		int64 		`json:"dstodj"`
 	Cate		int 		`json:"cate"`
-	Memo        string 		`json:"memo"`
 	Createat 	time.Time	`json:"createat"`
 }
 

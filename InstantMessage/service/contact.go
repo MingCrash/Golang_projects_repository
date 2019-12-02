@@ -17,7 +17,7 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 
 	//判断distId是否已注册用户
 	var tmpuser model.User
-	_, err = DBEngine.ID(distId).Get(&tmpuser)
+	_, err = DBEngine.Table("user").Where("mobile=?",distId).Get(&tmpuser)
 	if !(tmpuser.Id>0)	{
 		return errors.New("目标用户非注册用户")
 	}
@@ -38,19 +38,17 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	session := DBEngine.NewSession()
 	_ = session.Begin()
 	defer session.Close()
-	_, err1 := session.InsertOne(model.Contact{
+	_, err1 := session.Table("contact").InsertOne(model.Contact{
 		Ownerid:  userId,
 		Dstodj:   distId,
 		Cate:     model.CONCAT_CATE_USER,
-		Memo:     "",
 		Createat: time.Now(),
 	})
 
-	_, err2 := session.InsertOne(model.Contact{
+	_, err2 := session.Table("contact").InsertOne(model.Contact{
 		Ownerid:  distId,
 		Dstodj:   userId,
 		Cate:     model.CONCAT_CATE_USER,
-		Memo:     "",
 		Createat: time.Now(),
 	})
 	if err1 == nil && err2 == nil {
@@ -69,22 +67,26 @@ func (us *ContactService) Addfriend(userId,distId int64) (err error) {
 	return nil
 }
 
-func (us *ContactService) Joincommunity()  {
+//func (us *ContactService) Joincommunity()  {
+//
+//}
 
-}
+//func (us *ContactService) Createcommunity(comunInfo *model.Community) error {
+//	_, err := DBEngine.InsertOne(comunInfo)
+//	if err != nil {
+//		return err
+//	}
+//	return nil
+//}
 
-func (us *ContactService) Createcommunity(comunInfo *model.Community) error {
-	_, err := DBEngine.InsertOne(comunInfo)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (us *ContactService) Loadfriend(userId int64) (*[]model.Contact,error) {
-	tmpcontact := make([]model.Contact,0)
+func (us *ContactService) Loadfriend(userId int64) (*[]model.FriendsInfo,error) {
+	tmpcontact := make([]model.FriendsInfo,0)
 	//链式操作
-	err := DBEngine.Where("ownerid=?", userId).Find(&tmpcontact)
+	err := DBEngine.Table("contact").
+		Select("user.id,contact.ownerid,contact.dstodj,contact.cate,user.avatar,user.nickname,user.memo,contact.createat").
+		Join("INNER","user","contact.dstodj=user.mobile").
+		Where("contact.ownerid=?", userId).Find(&tmpcontact)
+
 	if err != nil {
 		return nil,err
 	}else if len(tmpcontact) == 0{

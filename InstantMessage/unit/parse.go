@@ -35,7 +35,8 @@ func BindJson(req *http.Request,obj interface{}) error{
 
 func BindForm(req *http.Request,ptr interface{}) error{
 	_ = req.ParseForm()
-	err := mapForm(ptr,req.Form)
+	//err := mapForm(ptr,req.Form)
+	err := mapForm(ptr,req.PostForm)
 	return err
 }
 //自动绑定方法

@@ -76,6 +76,7 @@
                         var url = "/chat/index.shtml?token="+res.data.token+"&id="+String(res.data.id);
                         sessionStorage.setItem("token",res.data.token);
                         sessionStorage.setItem("id",res.data.id);
+                        sessionStorage.setItem("mobile",res.data.mobile);
                         sessionStorage.setItem("userinfo",JSON.stringify(res.data));
                         location.href = url
                     }

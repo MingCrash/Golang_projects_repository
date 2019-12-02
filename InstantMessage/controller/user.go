@@ -56,10 +56,10 @@ func UserLogout(writer http.ResponseWriter, request *http.Request)  {
 	//_ = request.ParseForm()
 	//mobile := request.PostForm.Get("mobile")		//读取参数前需要解析
 	//passwd := request.PostForm.Get("passwd")
-	id := request.PostFormValue("id")	//调用时，已自动解析参数
+	mobile := request.PostFormValue("mobile")	//调用时，已自动解析参数
 	token := request.PostFormValue("token")
-	toverified_id, _ := strconv.ParseInt(id, 10, 64)
-	err := userService.Logout(toverified_id,token)
+	toverified_mobile, _ := strconv.ParseInt(mobile, 10, 64)
+	err := userService.Logout(toverified_mobile,token)
 	if err!=nil{
 		unit.RespFail(writer,err)
 	}else {

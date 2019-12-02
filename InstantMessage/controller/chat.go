@@ -116,7 +116,14 @@ func Dispach(data *[]byte,selfnode *ConnNode)  {
 	switch msg.Cmd{
 		//判断为私聊类型信息，根据目标id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_SINGLE_MSG:
-			TranferMsgto(msg.Dstid,data)
+			rwlocker.RLock()						//设置写锁
+			distUserNode,exists := clientMap[msg.Dstid]
+			rwlocker.RUnlock()
+			if exists {
+				distUserNode.DataQueue <- *data
+			}else{
+				log.Println(fmt.Sprintf("[UserId:%v DistId:%v] msg:消息转发失败，在用户列表中找不到对应的目标Id",msg.Userid,msg.Dstid))
+			}
 		//判断为群聊类型信息，根据目标群id,转发消息到目标connNode的dataqueue信息通道上
 		case model.CMD_ROOM_MSG:
 			fmt.Println("接收到群聊类型消息")
@@ -139,16 +146,6 @@ func Pong(selfnode *ConnNode)  {
 	}
 }
 
-func TranferMsgto(distid int64, data *[]byte) {
-	rwlocker.RLock()						//设置写锁
-	distUserNode,ok := clientMap[distid]
-	rwlocker.RUnlock()
-	if ok {
-		distUserNode.DataQueue <- *data
-	}else{
-		log.Println(fmt.Sprintf("distId:%d,msg:消息转发失败，在用户列表中找不到对应的目标Id",distid))
-	}
-}
 
 func CheckToken(userId int64,token string) (bool) {
 	user ,_ := userService.FindUserBy(userId)
